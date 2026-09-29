@@ -41,9 +41,7 @@ export const TERMINAL = {
   address: ['THAT IS NOT AN ADDRESS.', 'TRY AGAIN.'],
   nameRule: 'ONE TO FORTY CHARACTERS.',
   suspended: ['RECORD SUSPENDED.', 'ACCESS INTERRUPTED.'],
-  unreachable: ['RECORDS UNREACHABLE.'],
-  /** Only when the records cannot be reached: the form, kept on this device. */
-  beginHere: '[ BEGIN SELF-ISSUANCE ]',
+  unreachable: ['RECORDS UNREACHABLE.', 'TRY AGAIN LATER.'],
 
   /** For those who cannot see the seal. */
   sealAlt: 'Counter Identity Agency — WILDCARD System',
@@ -70,4 +68,52 @@ export const RECORD = {
   session: 'SESSION',
   close: 'CLOSE SESSION',
   label: 'Your WILDCARD* record',
+  /** The record's own sections — never a dashboard, a profile, settings. */
+  nav: [
+    ['record', 'RECORD'],
+    ['card', 'CARD'],
+    ['versions', 'VERSIONS'],
+  ],
+  fields: {
+    holder: 'HOLDER',
+    number: 'RECORD NO.',
+    clearance: 'CLEARANCE',
+    status: 'STATUS',
+    opened: 'OPENED',
+    address: 'ADDRESS',
+  },
+  status: { pending: 'PENDING', active: 'ACTIVE', suspended: 'SUSPENDED' },
+  card: {
+    title: 'THE CARD',
+    none: 'NOT YET ISSUED.',
+    how: 'A card is issued once you have issued yourself, and the studio has read what you gave.',
+    readings: [
+      ['A', 'SELF'],
+      ['B', 'MIRROR'],
+      ['C', 'WILDCARD'],
+    ],
+    unread: 'UNREAD',
+  },
+  versions: { title: 'VERSIONS', none: 'NONE WRITTEN.' },
+  home: 'The city',
+  sign: 'WHO DECIDES WHAT YOU ARE?',
+  /** The dossier (look B): the agency's form, overwritten. */
+  dossier: {
+    agency: 'COUNTER IDENTITY AGENCY — RECORD OF HOLDER',
+    title: 'WILDCARD* — SELF-AUTHORED RECORD',
+    likeness: 'NO LIKENESS ON FILE',
+    remarks: 'REMARKS',
+    amendments: 'AMENDMENTS',
+    issuance: 'CARD',
+    hand: "HOLDER'S OWN HAND",
+    form: 'FORM W*–00 · NOT FOR INSTITUTIONAL USE',
+  },
+} as const;
+
+/** Where BEGIN SELF-ISSUANCE goes while the form is being redrawn (/issue). */
+export const ISSUE = {
+  label: 'SELF-ISSUANCE',
+  lines: ['IS BEING', 'REWRITTEN.'],
+  note: 'The form that issues you is being redrawn. Your record stays open; nothing you have is lost.',
+  back: 'BACK TO RECORD',
 } as const;

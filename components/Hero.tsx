@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Program, { Phone } from './Program';
+import RecordMark from './records/RecordMark';
 import Question from './Question';
 import Wordmark from './Wordmark';
 import { DEFAULT_NAV, DEFAULT_VARIANT, HERO, NAV, VARIANTS, type LogoPlacement, type NavItem } from '@/lib/hero';
@@ -70,6 +71,9 @@ export default function Hero({ placement = VARIANTS[DEFAULT_VARIANT].placement, 
           </h1>
 
           <Phone />
+
+          {/* A holder's * — only for a browser with an issued record. */}
+          <RecordMark />
         </div>
 
         {/* The caption line: the words. On a phone they take the width. */}

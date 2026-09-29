@@ -45,12 +45,25 @@ function refusal(where: string, error: unknown): Refusal {
   return 'interrupted';
 }
 
-type Row = { display_name: string | null; record_number: string | null; clearance: Clearance; status: RecordStatus };
+type Row = {
+  display_name: string | null;
+  record_number: string | null;
+  clearance: Clearance;
+  status: RecordStatus;
+  created_at?: string | null;
+};
 
-const toRecord = (r: Row | null): HolderRecord =>
+const toRecord = (r: Row | null, address: string | null = null): HolderRecord =>
   r
-    ? { displayName: r.display_name, recordNumber: r.record_number, clearance: r.clearance, status: r.status }
-    : { displayName: null, recordNumber: null, clearance: 'unissued', status: 'pending' };
+    ? {
+        displayName: r.display_name,
+        recordNumber: r.record_number,
+        clearance: r.clearance,
+        status: r.status,
+        openedAt: r.created_at ?? null,
+        address,
+      }
+    : { displayName: null, recordNumber: null, clearance: 'unissued', status: 'pending', openedAt: null, address };
 
 export const access = {
   /** Whether this build knows where the records are. */
@@ -120,11 +133,11 @@ export const access = {
     }
     const { data, error: read } = await sb
       .from('profiles')
-      .select('display_name, record_number, clearance, status')
+      .select('display_name, record_number, clearance, status, created_at')
       .eq('id', user.user.id)
       .maybeSingle<Row>();
     if (read) return { ok: false, why: refusal('record: read', read) };
-    return { ok: true, value: toRecord(data) };
+    return { ok: true, value: toRecord(data, user.user.email ?? null) };
   },
 
   /** NAME FOR THIS RECORD: names the record (and, the first time, issues it
@@ -151,6 +164,19 @@ export const access = {
       .maybeSingle<{ number: number; statement: string; created_at: string }>();
     if (error) return { ok: false, why: refusal('latest', error) };
     return { ok: true, value: data ? { number: data.number, statement: data.statement, createdAt: data.created_at } : null };
+  },
+
+  /** Every version of the holder's identity, the latest first. */
+  async versions(): Promise<Outcome<IdentityVersion[]>> {
+    const sb = recordsClient();
+    if (!sb) return { ok: false, why: 'unreachable' };
+    const { data, error } = await sb
+      .from('versions')
+      .select('number, statement, created_at')
+      .order('number', { ascending: false })
+      .returns<{ number: number; statement: string; created_at: string }[]>();
+    if (error) return { ok: false, why: refusal('versions', error) };
+    return { ok: true, value: (data ?? []).map((v) => ({ number: v.number, statement: v.statement, createdAt: v.created_at })) };
   },
 
   /** Closes this browser's session. */

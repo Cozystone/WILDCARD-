@@ -46,7 +46,7 @@ const EXIT_REDUCED = 700;
 /** How fast the terminal types, in characters a second. */
 const CPS = 36;
 
-type Step = 'check' | 'verify' | 'holder' | 'busy' | 'code' | 'ask' | 'naming' | 'again' | 'offline' | 'leaving';
+type Step = 'check' | 'verify' | 'holder' | 'busy' | 'code' | 'ask' | 'naming' | 'again' | 'leaving';
 type Field = 'holder' | 'code' | 'name';
 type Line = { text: string; warn?: boolean };
 
@@ -251,7 +251,7 @@ export default function Login({
       switch (why) {
         case 'unreachable':
           say(T.unreachable, true);
-          setStep('offline');
+          setStep('holder');
           return;
         case 'expired':
           say(T.expired);
@@ -436,7 +436,7 @@ export default function Login({
     const fine = window.matchMedia?.('(pointer: fine)').matches ?? true;
     if (step === 'naming') nameInput.current?.focus({ preventScroll: true });
     else if (step === 'code' && fine) codeInput.current?.focus({ preventScroll: true });
-    else if (step === 'ask' || step === 'again' || step === 'offline') {
+    else if (step === 'ask' || step === 'again') {
       document.querySelector<HTMLButtonElement>('.login-choices button, .login-out .login-link')?.focus({ preventScroll: true });
     }
   }, [step, typed]);
@@ -562,10 +562,6 @@ export default function Login({
     return () => window.removeEventListener('keydown', onKey);
   }, [typed, answer]);
 
-  const beginHere = () => {
-    // The records are out of reach: the form, kept on this device.
-    router.push('/apply?via=terminal');
-  };
 
   if (step === 'verify') {
     return (
@@ -708,11 +704,6 @@ export default function Login({
                 {T.no}
               </button>
             </p>
-          ) : null}
-          {typed && step === 'offline' ? (
-            <button type="button" className="login-link" onClick={beginHere}>
-              {T.beginHere}
-            </button>
           ) : null}
           <p className="sr-only" aria-live="polite">
             {announce}
