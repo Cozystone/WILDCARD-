@@ -431,8 +431,10 @@ site_url = "https://wildcard-site-one.vercel.app"
 additional_redirect_urls = ["https://wildcard-site-one.vercel.app/auth/confirm", "https://wildcard-site-*-anthony-kims-projects-bc874109.vercel.app/auth/confirm"]
 
 [remotes.production.auth.rate_limit]
-# The built-in mailer's limit until an SMTP server is set (Authentication → Emails → SMTP).
-email_sent = 2
+# The project sends through its own SMTP (the operating Gmail, 2026-09-30).
+# `config push` does not manage this one: it is set in the dashboard
+# (Authentication → Rate Limits), where custom SMTP starts it at 30 an hour.
+email_sent = 30
 
 [remotes.production.auth.email]
 enable_confirmations = true
