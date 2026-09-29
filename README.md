@@ -208,3 +208,12 @@ npx supabase status -o env
 5. Authentication → Emails → SMTP: 자체 SMTP(Resend · Postmark 등). 기본 발송은 시험용이라 프로젝트 팀원 주소에만, 시간당 몇 통.
 6. Authentication → Sign In / Providers → Email: 켬, Confirm email 켬, 이메일 OTP 만료 3600초 이하, Rate Limits 확인.
 7. Vercel → Settings → Environment Variables 에 두 값 → 재배포.
+
+### 운영 프로젝트 (9/30 연결됨)
+
+- supabase.com 프로젝트 `wildcard-site` — ref `zqoonxlltveijuwckosn`, 서울(ap-northeast-2), 무료 플랜, 운영 계정 thecardthatcheats@gmail.com 의 조직. DB 비밀번호는 `.env.supabase.local`(깃 · 배포 제외).
+- 스키마 · RLS 적용(`npx supabase db push`), 인증 설정 적용(`[remotes.production]` — Site URL, Redirect URLs, OTP 6자리). Vercel 프로덕션에 `NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- **메일은 아직 Supabase 기본 발송**: 무료 플랜은 자체 SMTP 없이는 메일 템플릿을 바꿀 수 없고, 프로젝트 팀원 주소(운영 계정)에만, 시간당 2통. 그래서 지금 메일은 Supabase 기본 문구(영문 "sign-in link")이고, 링크는 코드 교환 방식(`/auth/confirm?code=…`, 같은 브라우저에서 열어야 함) — 터미널은 두 방식 다 받는다. 코드 입력(`CODE:`)은 우리 템플릿이 올라가야 쓸모가 있다.
+- **SMTP 를 붙이면**(대시보드 → Authentication → Emails → SMTP Settings, 예: Gmail — 운영 계정의 앱 비밀번호, smtp.gmail.com:465, 보내는 이름 WILDCARD*) 이어서:
+  1. `supabase/config.toml` 의 `[remotes.production.auth.rate_limit] email_sent` 를 30 정도로.
+  2. `npx supabase config push --project-ref zqoonxlltveijuwckosn` — 템플릿(`authorize.html`, 제목 W* RECORD ACCESS / AUTHORIZATION REQUEST)과 한도가 올라간다.

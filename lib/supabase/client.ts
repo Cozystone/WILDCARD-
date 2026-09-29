@@ -20,7 +20,9 @@ let client: SupabaseClient | null = null;
 
 export function recordsClient(): SupabaseClient | null {
   if (!URL || !KEY || typeof window === 'undefined') return null;
-  if (!client) client = createBrowserClient(URL, KEY);
+  // The link back from the transmission is taken up by the terminal itself
+  // (/auth/confirm), once, not by the client on whatever page it starts.
+  if (!client) client = createBrowserClient(URL, KEY, { auth: { detectSessionInUrl: false } });
   return client;
 }
 

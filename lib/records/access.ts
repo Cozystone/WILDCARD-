@@ -80,6 +80,22 @@ export const access = {
     return error ? { ok: false, why: refusal('confirm code', error) } : { ok: true, value: null };
   },
 
+  /** Authorizes with the link from the transmission, when the mail says
+   *  what the provider's own template says (a code for this browser to
+   *  exchange — the case until the project has its own mail server and so
+   *  its own template). */
+  async confirmReturn(code: string): Promise<Outcome> {
+    const sb = recordsClient();
+    if (!sb) return { ok: false, why: 'unreachable' };
+    const { error } = await sb.auth.exchangeCodeForSession(code);
+    if (!error) return { ok: true, value: null };
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (session) return { ok: true, value: null };
+    return { ok: false, why: refusal('confirm return', error) };
+  },
+
   /** Authorizes with the link from the transmission (/auth/confirm). */
   async confirmLink(tokenHash: string, type: EmailOtpType): Promise<Outcome> {
     const sb = recordsClient();

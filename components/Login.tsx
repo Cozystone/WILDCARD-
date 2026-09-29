@@ -54,7 +54,7 @@ const toLines = (texts: readonly string[], warn = false): Line[] => texts.map((t
 
 /** The link from the transmission, read once per page load — and taken out
  *  of the address bar, so that a reload does not spend it again. */
-let linkRead: { tokenHash: string | null; type: EmailOtpType | null; error: string | null } | null = null;
+let linkRead: { tokenHash: string | null; type: EmailOtpType | null; code: string | null; error: string | null } | null = null;
 function readLink() {
   if (linkRead) return linkRead;
   const q = new URLSearchParams(window.location.search);
@@ -62,6 +62,7 @@ function readLink() {
   linkRead = {
     tokenHash: q.get('token_hash'),
     type: linkType(q.get('type')),
+    code: q.get('code'),
     error: q.get('error_code') ?? h.get('error_code') ?? q.get('error') ?? h.get('error'),
   };
   if (linkRead.error) console.error('[records] link', linkRead.error, q.get('error_description') ?? h.get('error_description'));
@@ -75,13 +76,31 @@ function readLink() {
 
 /** A token is spent by its first use: one verification per token. */
 const verifications = new Map<string, Promise<Outcome>>();
-function verifyOnce(tokenHash: string, type: EmailOtpType) {
-  let p = verifications.get(tokenHash);
+function once(key: string, verify: () => Promise<Outcome>) {
+  let p = verifications.get(key);
   if (!p) {
-    p = access.confirmLink(tokenHash, type);
-    verifications.set(tokenHash, p);
+    p = verify();
+    verifications.set(key, p);
   }
   return p;
+}
+
+/** What came back: the link's own token (the WILDCARD* template), or a code
+ *  to exchange (the provider's default template). */
+function verifyLink(link: NonNullable<typeof linkRead>): Promise<Outcome> {
+  if (link.error) {
+    const why = link.error === 'otp_expired' || link.error === 'access_denied' ? 'expired' : 'interrupted';
+    return Promise.resolve({ ok: false, why });
+  }
+  if (link.tokenHash && link.type) {
+    const { tokenHash, type } = link;
+    return once(tokenHash, () => access.confirmLink(tokenHash, type));
+  }
+  if (link.code) {
+    const { code } = link;
+    return once(code, () => access.confirmReturn(code));
+  }
+  return Promise.resolve({ ok: false, why: 'expired' });
 }
 
 /** The terminal's lines, typed; read out whole. */
@@ -354,10 +373,7 @@ export default function Login({
     (async () => {
       const link = readLink();
       const started = performance.now();
-      const outcome: Outcome =
-        link.error || !link.tokenHash || !link.type
-          ? { ok: false, why: !link.error || link.error === 'otp_expired' || link.error === 'access_denied' ? 'expired' : 'interrupted' }
-          : await verifyOnce(link.tokenHash, link.type);
+      const outcome = await verifyLink(link);
       await wait(Math.max(0, 1500 - (performance.now() - started)));
       if (!alive(me)) return;
       setStep('busy');
