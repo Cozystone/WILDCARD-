@@ -1,0 +1,3 @@
+From https://github.com/Rezmason/matrix (MIT, (c) 2018 Rezmason), commit 5ba9049.
+Only the classic font is served (assets/Matrix-Code.ttf): components/CodeRain.tsx draws the rain with it,
+after Rezmason's glyph order, classic colours and principle. The WebGL page is kept in tools/.props/matrix-iframe (not deployed).

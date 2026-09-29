@@ -1,0 +1,25 @@
+node_modules
+.next
+out
+.vercel
+.env
+.env*.local
+.DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+.vercel
+.env*
+
+# the workspace's own notes (0.Creative), not the site's
+BRIEF.md
+.claude/
+
+# work files and the vendored reference (see .vercelignore)
+tools/.props/
+tools/.vendor/
+
+# Supabase CLI's local state
+supabase/.temp/
+supabase/.branches/
+!.env.example

@@ -1,0 +1,3000 @@
+@import 'tailwindcss';
+
+/*
+  Helvetica World, if the visitor's machine has it. `local()` looks at installed
+  fonts only: nothing is downloaded, nothing is embedded. It decides the small
+  type only — the wordmark, the question and the film's captions are outlines
+  (lib/wordmark.ts, lib/manifesto.ts, lib/captions.ts) and need no font. To
+  give every visitor the real face, license the webfont and add a `url()`
+  source in front of the `local()` ones.
+*/
+@font-face {
+  font-family: 'Helvetica World';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Helvetica World'), local('HelveticaWorld-Regular');
+}
+@font-face {
+  font-family: 'Helvetica World';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Helvetica World Bold'), local('HelveticaWorld-Bold');
+}
+
+@theme {
+  /* Ink is the frame around the picture and the bars the film plays between,
+     a degree colder than black. Paper is type on ink, a degree colder than
+     white. Muted is the caption line: it reads, it does not compete. Wall and
+     graphite are the gallery's, off the page for now. */
+  --color-ink: #0a0b0d;
+  --color-paper: #f2f4f7;
+  --color-muted: #80868f;
+  --color-wall: #ffffff;
+  --color-graphite: #5b6068;
+  /* The terminal after the film: the green of a phosphor as a film shot it,
+     pale and a little grey (sampled from the frame), on a black that is
+     the screen's, not ink's. */
+  --color-phosphor: #9ed4b4;
+  --color-phosphor-bed: #040606;
+
+  /* Helvetica where it exists (Apple), Arial — its metric twin — elsewhere. */
+  --font-grotesk:
+    'Helvetica World', 'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif;
+}
+
+:root {
+  /* The air between the picture and the screen's edge, and the left edge
+     everything on the page hangs from. */
+  --frame: clamp(16px, 2.2vw, 36px);
+
+  /* The wordmark is sized against the photograph, not the window.
+     The photograph fills its plate with object-fit: cover, so when the window
+     narrows it is cropped, not shrunk: the horse and the towers stay the size
+     they were. The mark used to be 26vw and shrank on its own, falling out of
+     proportion with the picture it sits on. Now it is a fixed share of the
+     photograph's width as drawn, taken from the full screen it was approved
+     on: 420px across a 1635px photograph (2560 × 1600 at 150%, a maximised
+     window 1707 CSS px wide). Narrow the window and the mark holds, like
+     everything else in the picture; widen it and the mark grows with it.
+     B scales this by --mark-scale, below. */
+  --mark-ratio: 0.257;
+  /* ...until it would take more than this share of the picture's visible
+     width. Past that (a phone, a very narrow window) it follows the width, so
+     it never becomes a banner. */
+  --mark-max: 0.6;
+  /* A only: how far down the picture the centred mark sits, as a share of the
+     picture's height. At the frame margin it was pinned to the edge; lower, it
+     floats in the band of sky and glass above the horse, with air above it. */
+  --mark-top-center: 15%;
+}
+
+html {
+  background: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-synthesis: none;
+}
+
+/* The small type everywhere: the caption line, LOAD, CLOSE, SOUND, the
+   gallery's label and captions. One size, one tracking, capitals. */
+.caption-type {
+  font-size: 0.625rem;
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+  .caption-type {
+    font-size: 0.6875rem;
+  }
+}
+
+/* ── the screen: the city ───────────────────────────────────────────── */
+
+/* The plate is the frame of reference for everything on it. As a size
+   container, 100cqw × 100cqh is the plate's own width and height for its
+   children, so the numbers below are declared here and only ever used inside
+   it. (Used outside the plate, container units would measure the viewport.)
+   --photo-aspect and --mark-aspect are set inline by Hero.tsx from the
+   picture's pixel size and the outlines' bounds, so replacing either one
+   keeps the arithmetic right. */
+.hero-plate {
+  container-type: size;
+  /* The photograph as drawn: cover makes it as wide as the larger of the
+     plate's width and the plate's height × the picture's aspect. */
+  --photo-w: max(100cqw, 100cqh * var(--photo-aspect, 1.7768));
+  --mark-w: calc(min(var(--photo-w) * var(--mark-ratio), 100cqw * var(--mark-max)) * var(--mark-scale, 1));
+  --mark-h: calc(var(--mark-w) / var(--mark-aspect, 7.2225));
+}
+
+/* Browsers without container units (Safari 15 and older) keep the old,
+   window-based size rather than an unsized mark. */
+@supports not (width: 1cqw) {
+  .hero-plate {
+    --mark-w: clamp(176px, 26vw, 420px);
+  }
+}
+
+.hero-mark {
+  position: absolute;
+  width: var(--mark-w);
+  margin: 0;
+  color: var(--color-paper);
+}
+
+.hero-mark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The phone at the foot of the picture, bottom right — LOAD. A rendered
+   front elevation of a 1980s brick of a mobile (lib/phone.ts,
+   tools/render-props.py), sized against the photograph like the mark: two
+   fifths of the picture's drawn height, antenna and all — it is tall and
+   thin, and at the payphone's 30% it read as a stick — never more than half
+   the plate's, and set in from the picture's right and bottom edges by the
+   margin the mark keeps from the left, so the mark top left and the phone
+   bottom right hold the picture between them. A soft shadow under it, the
+   depth of a thing standing on the wet road, not a sticker. */
+.hero-plate {
+  --photo-h: calc(var(--photo-w) / var(--photo-aspect, 1.7768));
+  --phone-h: min(var(--photo-h) * 0.4, 100cqh * 0.5);
+}
+
+@supports not (width: 1cqw) {
+  .hero-plate {
+    --phone-h: clamp(96px, 15vw, 240px);
+  }
+}
+
+.hero-phone {
+  position: absolute;
+  right: calc(var(--mark-h, 60px) * 0.4);
+  bottom: calc(var(--mark-h, 60px) * 0.4);
+  height: var(--phone-h);
+  width: auto;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* The sun is behind it, top right: its shadow falls toward us and left. */
+  filter: drop-shadow(-5px 9px 10px rgb(0 0 0 / 0.5));
+}
+
+.hero-phone img {
+  display: block;
+  height: 100%;
+  width: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.hero-phone:focus-visible {
+  outline: 1px solid var(--color-paper);
+  outline-offset: 6px;
+}
+
+/* An old tin sign on the road, left of the phone, its arrow at it — DIRECT
+   LINE / CALL US HERE! — on every visit. Sized against the photograph like
+   the mark and the phone, set a little apart from the phone and standing on
+   the same road, a few degrees off true, its shadow the phone's. It only
+   points: pressing it does nothing — the phone is the one way in. */
+.hero-sign {
+  position: absolute;
+  right: calc(var(--mark-h, 60px) * 0.4 + var(--phone-h) * var(--phone-aspect, 0.184) + var(--mark-h, 60px) * 0.35);
+  bottom: calc(var(--mark-h, 60px) * 0.4 + var(--phone-h) * 0.02);
+  width: min(var(--photo-w) * 0.2, 100cqw * 0.42);
+  display: block;
+  pointer-events: none;
+  transform: rotate(-2.5deg);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(-5px 9px 10px rgb(0 0 0 / 0.5));
+}
+
+.hero-sign img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+
+/* A · B · C. */
+
+/* B, the home page: an eighth larger than A and C (472px on the full screen)
+   and nearer the left edge than the top — 26px in from the left, 36px down,
+   where the other placements keep an even margin. The mark leans into the
+   picture's edge without touching it: not C's corner, but not a label set at
+   a safe distance either. Both margins are in the mark's own heights, so the
+   lean is the same at every size. */
+.hero[data-placement='left'] {
+  --mark-scale: 1.125;
+}
+
+.hero[data-placement='left'] .hero-mark {
+  top: calc(var(--mark-h) * 0.55);
+  left: calc(var(--mark-h) * 0.4);
+}
+
+.hero[data-placement='center'] .hero-mark {
+  top: var(--mark-top-center);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* A's mark sits lower, on the bright sky either side of the tower, so its
+   scrim holds its depth down past the mark before it lets go — still gone by
+   the middle of the picture. Measured, not eyeballed: at 15% the letters get
+   a median 3.1:1 against the photograph and none of their pixels fall under
+   2:1, a touch better than the mark had at the top edge. With the shallow
+   scrim above, half its pixels would have fallen under 2:1. */
+.hero[data-placement='center'] .hero-scrim {
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.32) 0%,
+    rgb(0 0 0 / 0.3) 22%,
+    rgb(0 0 0 / 0.1) 38%,
+    rgb(0 0 0 / 0) 50%
+  );
+}
+
+/* C: the mark rides the picture's top edge — half on the frame, half on the
+   photograph — flush with the picture's left edge. The mark sits at the top
+   of the plate and the photograph starts half a mark further down inside it,
+   so the frame above the picture is the frame plus half the mark, and the
+   mark keeps the same air over it as the picture has at its sides. Doing it
+   inside the plate, rather than by padding the section, keeps the plate the
+   same size in A, B and C. */
+.hero[data-placement='offset'] .hero-mark {
+  top: 0;
+  left: 0;
+}
+
+.hero[data-placement='offset'] .hero-photo {
+  top: calc(var(--mark-h) / 2);
+}
+
+/* Only as much darkening across the top of the picture as white type needs
+   to hold on a bright sky, and gone by a third of the way down. The
+   photograph is otherwise not touched. */
+.hero-scrim {
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.36) 0%,
+    rgb(0 0 0 / 0.14) 16%,
+    rgb(0 0 0 / 0) 36%
+  );
+}
+
+/* The slash belongs to the word before it, so a line never starts with one. */
+.hero-index li:not(:last-child)::after {
+  content: '/';
+  margin: 0 0.9em;
+  opacity: 0.45;
+}
+
+/* ── the program: the bars, the static, the film, the question ── */
+
+.program-sound::before {
+  content: '';
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.7em;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 0.05em;
+}
+
+/* The stage: the whole viewport, over everything. Its background stays
+   clear while the bars rise — the city shows between them — and goes to
+   ink with the static, so that whatever the viewport's shape, from then
+   on there is nothing but the screen and black.
+
+   The screen is a 2.39:1 letterbox, the shape of a clip of a film: as wide
+   as the viewport, the rest of the height split between the two bars. The
+   bars are never less than `--bar-min` each — on a viewport of the clip's
+   own shape (a 21:9 monitor) there would otherwise be none, and no bars
+   is no clip — so a viewport wider than about 2.15:1 gets the 2.39 box
+   centred, with ink either side: the clip keeps its shape rather than
+   stretching to the glass. A phone held upright keeps the film's own 16:9
+   in the middle of the black instead, where 2.39 would leave a sliver. */
+.program {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  color: var(--color-paper);
+  --screen-ratio: 2.39;
+  --bar-min: 5svh;
+  --screen-h: min(100svh - 2 * var(--bar-min), 100vw / var(--screen-ratio));
+  --screen-w: min(100vw, var(--screen-h) * var(--screen-ratio));
+  --bar-h: calc((100svh - var(--screen-h)) / 2);
+}
+
+@media (orientation: portrait) {
+  .program {
+    --screen-ratio: calc(16 / 9);
+  }
+}
+
+.program[hidden] {
+  display: none;
+}
+
+.program[data-phase='static'],
+.program[data-phase='film'],
+.program[data-phase='end'] {
+  background: var(--color-ink);
+}
+
+.program-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--bar-h);
+  background: var(--color-ink);
+}
+
+.program-bar-top {
+  top: 0;
+}
+
+.program-bar-bottom {
+  bottom: 0;
+}
+
+/* First the bars rise from the edges to the letterbox — the bottom one a
+   beat ahead (PROGRAM.barLead): the top one comes down over bright sky and
+   is seen at once, the bottom one over dark road and is seen later. */
+.program[data-phase='bars'] .program-bar {
+  animation: program-bar 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.program[data-phase='bars'] .program-bar-top {
+  animation-delay: var(--bar-lead, 0s);
+}
+
+@keyframes program-bar {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--bar-h);
+  }
+}
+
+.program-screen {
+  position: absolute;
+  left: 50%;
+  top: var(--bar-h);
+  width: var(--screen-w);
+  height: var(--screen-h);
+  transform: translateX(-50%);
+  overflow: hidden;
+}
+
+/* Then the screen between them goes dark and breaks into static... */
+.program[data-phase='static'] .program-screen,
+.program[data-phase='film'] .program-screen,
+.program[data-phase='end'] .program-screen {
+  background: var(--color-ink);
+}
+
+.program-film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 16:9 into 2.39:1 loses a quarter of the height. Anchored a little above
+     the middle, it comes off the coats and consoles at the foot, not the
+     heads: checked shot by shot (WORKS/2026-09_wildcard-dreams/study/
+     letterbox-check.jpg). */
+  object-position: 50% 15%;
+  opacity: 0;
+}
+
+.program[data-phase='end'] .program-film {
+  opacity: 1;
+}
+
+/* The film comes out of the snow the way a set finds a signal: it rolls
+   in a little high, over-bright and soft, jumps, and settles — over a
+   second, while the snow is still going under it. */
+.program[data-phase='film'] .program-film {
+  animation: film-lock var(--lock) cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes film-lock {
+  0% {
+    opacity: 0;
+    transform: translateY(-5%) scaleY(1.03);
+    filter: brightness(1.9) contrast(1.4) blur(1.4px);
+  }
+  18% {
+    opacity: 0.55;
+    transform: translateY(2.2%) scaleY(1.01);
+    filter: brightness(1.45) contrast(1.2) blur(0.8px);
+  }
+  34% {
+    opacity: 0.8;
+    transform: translateY(-1%);
+    filter: brightness(1.2) blur(0.4px);
+  }
+  55% {
+    opacity: 0.95;
+    transform: translateY(0.3%);
+    filter: brightness(1.06) blur(0.1px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* ...the snow: a set with no signal. A loop of television static made for
+   it (tools/build-static.py: streaked, two fields, a rolling band, tears,
+   the odd dropped sync), with its hiss, stretched over the screen — it was
+   never sharp. It runs a second and a half: long enough to be a set that
+   has lost the picture, not a flicker. Twice the picture drops to black for
+   a frame or two, the set trying to lock; then the film comes through it
+   (above), and the snow thins out under the film as it settles. */
+.program-static {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.program-snow {
+  position: absolute;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
+  object-fit: cover;
+  filter: contrast(1.08) brightness(0.96);
+}
+
+.program-static::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--color-ink);
+  opacity: 0;
+}
+
+.program[data-phase='static'] .program-static {
+  opacity: 1;
+}
+
+.program[data-phase='static'] .program-static::after {
+  animation: program-static-cut var(--static) steps(1, end) both;
+}
+
+@keyframes program-static-cut {
+  0%,
+  41%,
+  44%,
+  79%,
+  81%,
+  100% {
+    opacity: 0;
+  }
+  42%,
+  43% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+}
+
+.program[data-phase='film'] .program-static {
+  animation: program-static-out 0.7s ease-in both;
+}
+
+@keyframes program-static-out {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Captions along the foot of the screen: each line an outline in the
+   wordmark's face, so it is the same bold on every machine. Every viewBox
+   shares one height with the baseline in one place, so one CSS height sets
+   them all on one baseline; the width follows. Paper with an ink halo. */
+.program-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+  height: clamp(1.1rem, 1.9vw, 1.8rem);
+  width: auto;
+  max-width: 92%;
+  color: var(--color-paper);
+  filter: drop-shadow(0 0 1px rgb(10 11 13 / 0.9)) drop-shadow(0 1px 2px rgb(10 11 13 / 0.7))
+    drop-shadow(0 0 10px rgb(10 11 13 / 0.5));
+}
+
+/* The question over the held last frame: one line in paper, dead centre of
+   the screen. It crosses his mouth (study/last-frame.png) and that is
+   accepted: the centre is the point. Its width is the size of a statement,
+   not a wall. */
+.program-question {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(62%, 1000px);
+  color: var(--color-paper);
+  filter: drop-shadow(0 1px 2px rgb(10 11 13 / 0.6)) drop-shadow(0 0 12px rgb(10 11 13 / 0.35));
+  opacity: 0;
+  transition: opacity var(--question-in, 0.9s) cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+@media (orientation: portrait) {
+  .program-question {
+    width: 92%;
+  }
+}
+
+.program[data-phase='film'] .program-question[data-shown='yes'],
+.program[data-phase='end'] .program-question[data-shown='yes'] {
+  opacity: 1;
+}
+
+.question {
+  margin: 0;
+}
+
+.question svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* DECIDES, left blank under a resting pointer. Touch screens never see it:
+   there is nothing to rest on. */
+.blank-letters,
+.blank-rule {
+  transition: opacity 0.9s ease;
+}
+
+.blank-rule {
+  opacity: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .blank-word:hover .blank-letters {
+    opacity: 0;
+  }
+
+  .blank-word:hover .blank-rule {
+    opacity: 1;
+  }
+}
+
+/* SOUND top left, in the top bar, while the film runs. There is no CLOSE:
+   once the phone is picked up the program runs to its end. */
+.program-sound {
+  position: absolute;
+  top: var(--frame);
+  left: var(--frame);
+  z-index: 2;
+  padding: 0.6em 0.4em;
+  margin: -0.6em -0.4em;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  color: var(--color-paper);
+  cursor: pointer;
+  text-shadow:
+    0 0 2px rgb(10 11 13 / 0.95),
+    0 1px 2px rgb(10 11 13 / 0.85);
+}
+
+.program[data-sound='off'] .program-sound::before {
+  opacity: 0.35;
+}
+
+/* ── after the question: the machine, the push-in, the screen ── */
+
+/* The machine on white. It is under the bars and the screen, so it is
+   nothing until the screen fades (`mac`): then it is what the fade goes to,
+   and what the bars uncover when they leave. It is gone again once the
+   screen has gone black (`terminal`). The white is the wall's, not paper's:
+   a rendered ground, not a page. */
+.program-scene {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-wall);
+}
+
+.program[data-phase='mac'] .program-scene,
+.program[data-phase='zoom'] .program-scene,
+.program[data-phase='terminal'] .program-scene,
+.program[data-phase='rebirth'] .program-scene,
+.program[data-phase='rain'] .program-scene,
+.program[data-phase='wash'] .program-scene {
+  display: flex;
+}
+
+/* The red pill: the white round the machine goes out while the rain starts
+   on its screen — the picture is pushed in, the white is at the edges if
+   anywhere — so that what the camera pulls back into is the dark the login
+   will be in. Unlike the first time the machine is seen, on white. */
+.program[data-phase='rain'] .program-scene,
+.program[data-phase='wash'] .program-scene {
+  background: #030304;
+  transition: background-color 0.9s ease;
+}
+
+.program[data-phase='colorbars'],
+.program[data-phase='login'] {
+  background: #030304;
+}
+
+/* After the rain: a second of colour bars — the author's clip, a set's test
+   card torn and waving, with its tone — cut in over the dark and cut out
+   again before the login. Stretched to the glass whatever its shape: the
+   bars read as bars at any width, and the picture was never sharp. */
+.program-colorbars {
+  position: absolute;
+  inset: 0;
+  display: none;
+  background: #000;
+}
+
+.program[data-phase='colorbars'] .program-colorbars {
+  display: block;
+}
+
+.program-colorbars video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+/* Its size is the machine's, not the viewport's: about half the width of a
+   wide window, and never so tall that it touches the edges. Upright, most
+   of the width. The machine is a wide picture with the part round the
+   screen laid over it at three times the size (lib/mac.ts), blended in at
+   its edges so no seam shows, and the screen's glass over that. */
+.program-mac {
+  position: relative;
+  width: min(52vw, 78vh * var(--mac-aspect));
+  max-width: 1100px;
+  transform: translate(0, 0) scale(1);
+  will-change: transform;
+  user-select: none;
+}
+
+@media (orientation: portrait) {
+  .program-mac {
+    width: min(88vw, 60vh * var(--mac-aspect));
+  }
+}
+
+.program-mac-wide {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-user-drag: none;
+}
+
+.program-mac-close {
+  position: absolute;
+  display: block;
+  -webkit-user-drag: none;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 68%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, #000 68%, transparent 100%);
+}
+
+/* The glass. The render's screen is already black glass (it reflects; the
+   lights are off-axis, so what it gives back is the dark of the room).
+   Over it, only what a tube that is off would add: the corners falling
+   further into black, the bulge of the face catching the room as a soft
+   sheen top left and a hairline of light along its top edge. The raster
+   and the type are not here: they are fixed to the viewport (below),
+   which the screen fills by the time they come up. */
+.program-glass {
+  position: absolute;
+  border-radius: 1.6% / 2.2%;
+  background: radial-gradient(ellipse at 50% 46%, rgb(4 6 6 / 0.3) 0%, rgb(4 6 6 / 0.5) 58%, rgb(4 6 6 / 0.86) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    inset 0 0 1.5em 0.2em rgb(0 0 0 / 0.6);
+}
+
+.program-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse 60% 38% at 26% 18%, rgb(255 255 255 / 0.075), transparent 70%),
+    linear-gradient(158deg, rgb(255 255 255 / 0.05) 0%, transparent 38%);
+}
+
+/* The fade: the screen — held frame and question together — goes to
+   nothing over the machine, between the bars. */
+.program[data-phase='mac'] .program-screen {
+  opacity: 0;
+  transition: opacity var(--fade) cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* The bars stay through the fade and the moment after it — the machine is
+   seen between them, as the film was — and leave the way they came as the
+   picture pushes in on the screen: over the same seconds, on the same
+   curve, one move. */
+.program[data-phase='zoom'] .program-bar {
+  animation: program-bar-out var(--zoom) cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+@keyframes program-bar-out {
+  from {
+    height: var(--bar-h);
+  }
+  to {
+    height: 0;
+  }
+}
+
+/* They are not there for what follows; nor is the film's screen. */
+.program[data-phase='terminal'] .program-bar,
+.program[data-phase='rebirth'] .program-bar,
+.program[data-phase='rain'] .program-bar,
+.program[data-phase='wash'] .program-bar,
+.program[data-phase='login'] .program-bar,
+.program[data-phase='zoom'] .program-screen,
+.program[data-phase='terminal'] .program-screen,
+.program[data-phase='rebirth'] .program-screen,
+.program[data-phase='rain'] .program-screen,
+.program[data-phase='wash'] .program-screen,
+.program[data-phase='login'] .program-screen {
+  display: none;
+}
+
+/* The push-in: the picture moves so the machine's screen is at the centre
+   and grows, about that point, until the screen takes nine tenths of the
+   viewport in its tighter dimension — the bezel stays in the frame round
+   it, so it is a screen you look at, not the glass of your own. The numbers
+   are measured when it starts (components/Program.tsx); the origin is the
+   screen's centre in the picture (lib/mac.ts). It eases in and out: a
+   camera that moves up to a screen and stops there. */
+.program[data-phase='zoom'] .program-mac,
+.program[data-phase='terminal'] .program-mac,
+.program[data-phase='rebirth'] .program-mac {
+  transform: translate(var(--zoom-x), var(--zoom-y)) scale(var(--zoom-s));
+  transition: transform var(--zoom) cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* The red pill: the same move backwards, under the rain, to the whole
+   machine as it first stood — and it stays there while the rain drains. */
+.program[data-phase='rain'] .program-mac {
+  transform: translate(0, 0) scale(1);
+  transition: transform var(--out) cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.program[data-resizing='yes'] .program-mac {
+  transition: none;
+}
+
+/* The screen once it is pushed in on: a layer in the screen's rectangle on
+   the viewport (`--crt-*`, measured with the push-in, and again on a
+   resize), corners rounded like the glass, holding the raster, the grain and
+   the type. Nothing until the push-in, then it comes up over its last part
+   (`--dark` of `--zoom`). The raster's pitch is the screen's height over the
+   342 lines the Macintosh drew (`--line`), so the lines are the screen's.
+   Everything in it is sized by the screen, so the terminal is as
+   responsive as the screen is. */
+.program-terminal {
+  position: absolute;
+  left: var(--crt-x);
+  top: var(--crt-y);
+  width: var(--crt-w);
+  height: var(--crt-h);
+  border-radius: 1.6% / 2.2%;
+  overflow: hidden;
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+  /* The raster's pitch: the lit area's height over its 342 rows. */
+  --line: calc(var(--crt-w) * 0.88 / 512);
+}
+
+.terminal-lines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0) 0,
+    rgb(0 0 0 / 0) calc(var(--line, 3px) * 0.55),
+    rgb(0 0 0 / 0.28) calc(var(--line, 3px) * 0.55),
+    rgb(0 0 0 / 0.28) var(--line, 3px)
+  );
+  mix-blend-mode: multiply;
+}
+
+.terminal-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.09;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  mix-blend-mode: screen;
+}
+
+.program[data-phase='mac'] .program-terminal,
+.program[data-phase='zoom'] .program-terminal,
+.program[data-phase='terminal'] .program-terminal,
+.program[data-phase='rebirth'] .program-terminal,
+.program[data-phase='rain'] .program-terminal {
+  display: block;
+}
+
+.program[data-phase='zoom'] .program-terminal,
+.program[data-phase='terminal'] .program-terminal,
+.program[data-phase='rebirth'] .program-terminal {
+  opacity: 1;
+  transition: opacity calc(var(--zoom) * var(--dark)) linear calc(var(--zoom) * (1 - var(--dark)));
+}
+
+/* The red pill: the type goes at once; the rain takes over. */
+.program[data-phase='rain'] .program-terminal {
+  opacity: 0;
+  transition: opacity 0.25s linear;
+}
+
+/* The lit area of the glass, as on the real machine: 512 × 342 pixels
+   (3:2), centred on a glass that is squarer, with black round it. The
+   canvas in it (components/PixelScreen.tsx) is drawn at exactly that
+   resolution, one bit a pixel, and shown here without smoothing, so every
+   pixel is a square of light; the glow is the tube's — a tight bloom and a
+   wide faint one — and the whole of it breathes very slightly. Nothing in
+   it is sized in the window's pixels: it is the Macintosh's screen, at the
+   Macintosh's resolution, whatever size the window makes it. */
+.crt-raster {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 88%;
+  aspect-ratio: 512 / 342;
+  transform: translate(-50%, -50%);
+}
+
+.crt-raster canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 0.6px rgb(158 212 180 / 0.95)) drop-shadow(0 0 3px rgb(140 220 170 / 0.5))
+    drop-shadow(0 0 11px rgb(120 210 160 / 0.28));
+  animation: terminal-breathe 4.3s steps(1, end) infinite;
+}
+
+/* The pills, under READY FOR A REBIRTH?, drawn on the same grid: each of
+   their 56 × 24 pixels is one of the screen's. */
+.rebirth-pills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  display: flex;
+  justify-content: center;
+  gap: calc(100% * 88 / 512);
+}
+
+.rebirth-pill {
+  width: calc(100% * 56 / 512);
+  flex: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  image-rendering: pixelated;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+
+.rebirth-pill svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.rebirth-pill[data-color='red']:hover,
+.rebirth-pill[data-color='red']:focus-visible {
+  transform: translateY(-2%);
+  filter: brightness(1.12) drop-shadow(0 0 0.6em rgb(230 40 50 / 0.55));
+  outline: none;
+}
+
+.rebirth-pill[data-color='blue']:hover,
+.rebirth-pill[data-color='blue']:focus-visible {
+  transform: translateY(-2%);
+  filter: brightness(1.12) drop-shadow(0 0 0.6em rgb(50 100 240 / 0.55));
+  outline: none;
+}
+
+/* The rain (components/CodeRain.tsx): a transparent canvas over the whole
+   viewport, over the machine and the dark round it. It draws its own
+   black behind each column's last drop, so by the time it has drained the
+   canvas is black from edge to edge and the login can come up in it
+   without a seam. */
+.program-coderain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── the login (components/Login.tsx) ──────────────────────────────────
+
+   An institution's terminal, in the dark the rain washed down to: a thin
+   gold line round the screen, the seal at the top, the terminal's name
+   spaced out under it, Holder and Clearance, the notice in small type, the
+   seal again, faint, in the corner, with the station's name. It comes up the
+   way a terminal does — a piece at a time, each one there or not, no fades.
+   On a page of its own (/terminal, /auth/confirm) it is the whole viewport. */
+.login {
+  position: absolute;
+  inset: 0;
+  background: #030304;
+  color: #e7e7e4;
+  font-family: var(--font-grotesk);
+  text-transform: none;
+  letter-spacing: normal;
+  overflow: hidden;
+}
+
+.login[data-standalone='yes'] {
+  position: fixed;
+  z-index: 60;
+}
+
+.login > * {
+  opacity: 0;
+  animation: login-on 0.01s var(--d, 0s) both;
+}
+
+@keyframes login-on {
+  to {
+    opacity: 1;
+  }
+}
+
+/* The gold line, as its four sides — so that on the way out it can go in
+   places, not all at once. */
+.login-frame {
+  --d: 0.15s;
+  position: absolute;
+  inset: clamp(6px, 0.8vw, 12px);
+  pointer-events: none;
+}
+
+.login-frame i {
+  position: absolute;
+  background: rgb(215 186 73 / 0.9);
+}
+
+.login-frame-t {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform-origin: 100% 50%;
+}
+
+.login-frame-b {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.login-frame-l {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+}
+
+.login-frame-r {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 1px;
+  transform-origin: 50% 100%;
+}
+
+.login-seal {
+  --d: 0.45s;
+  position: absolute;
+  left: 50%;
+  top: 5vh;
+  width: min(38vh, 44vw);
+  height: auto;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+/* C.I.A TERMINAL, as the author drew it: 485 × 37 at the size of a seal
+   425 across, so kept in that proportion to the seal. It is the one picture
+   twice, cut where the gap is — C.I.A (0–24.7% of it), TERMINAL (37.5–99%)
+   — so that on the way out the two can go their own ways. */
+.login-title {
+  --d: 0.75s;
+  position: absolute;
+  left: 50%;
+  top: calc(5vh + min(38vh, 44vw) + 3.2vh);
+  width: calc(min(38vh, 44vw) * 485 / 425);
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+.login-title img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.login-title-rest {
+  clip-path: inset(0 0 0 30%);
+}
+
+.login-title-cia {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 70% 0 0);
+  transform-origin: 12.6% 50%;
+}
+
+/* What C.I.A comes down to: the wordmark's own asterisk. */
+.login-star {
+  position: absolute;
+  left: 12.6%;
+  top: 50%;
+  height: 170%;
+  width: auto;
+  aspect-ratio: 334 / 322;
+  fill: #e7e7e4;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+/* Holder and Clearance where they always were; the terminal's lines under
+   them, and the notice kept clear of however many there are (--form-h, the
+   form's height, measured). */
+.login-form {
+  --d: 1.05s;
+  --f: clamp(18px, 1.55vw, 26px);
+  position: absolute;
+  left: 42%;
+  top: 60vh;
+  width: min(48vw, 560px);
+  margin: 0;
+  font-size: var(--f);
+}
+
+.login-field,
+.login-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Clearance: Unissued — one space, as it always read. */
+.login-row {
+  gap: 0.28em;
+}
+
+.login-field[data-editable='yes'] {
+  cursor: text;
+}
+
+.login-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.login-row {
+  margin-top: 1.9em;
+}
+
+.login-row-record {
+  margin-top: 0.55em;
+}
+
+/* The field, when the Holder line is touched: the white bar of the old
+   terminal, and a caret in it. Before that, nothing — a Holder: and the
+   dark; a pointer over the line brings up only a trace of the bar. */
+.login-bar {
+  position: relative;
+  display: inline-block;
+  flex: 0 1 15em;
+  min-width: 6em;
+  height: 1.18em;
+  align-self: center;
+}
+
+.login-bar input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 0.32em;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #030304;
+  font-family: var(--font-grotesk);
+  font-size: 0.74em;
+  line-height: 1;
+  caret-color: #030304;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.login-bar[data-on='yes'] input {
+  background: #ecebe6;
+}
+
+.login-field[data-editable='yes']:hover .login-bar[data-on='no'] input {
+  background: rgb(236 235 230 / 0.08);
+}
+
+.login-help {
+  position: absolute;
+  left: 0;
+  top: calc(var(--f) * 1.52);
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(10px, 0.74vw, 12px);
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: #a4a49e;
+  white-space: nowrap;
+  visibility: hidden;
+}
+
+.login-help[data-on='yes'] {
+  visibility: visible;
+}
+
+.login-out {
+  margin-top: 1.05em;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(12px, 0.9vw, 14px);
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+}
+
+.login-log p {
+  min-height: 1.7em;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.login-warn {
+  color: #ec6166;
+}
+
+.login-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  margin: 0.25em 0 0;
+}
+
+.login-bar-small {
+  flex: 0 1 13em;
+  min-width: 7em;
+  height: 1.55em;
+}
+
+.login-bar-small input {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1em;
+  letter-spacing: 0.12em;
+}
+
+.login-choices {
+  display: flex;
+  gap: 1.8em;
+  margin: 0.3em 0 0;
+}
+
+.login-choices button,
+.login-link {
+  padding: 0.15em 0.3em;
+  margin: 0 -0.3em;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.login-link {
+  margin-top: 0.3em;
+}
+
+.login-choices button:hover,
+.login-choices button:focus-visible,
+.login-link:hover,
+.login-link:focus-visible {
+  background: #e7e7e4;
+  color: #030304;
+  outline: none;
+}
+
+/* A phone keeps its text fields at 16px or it zooms the page into them. */
+@media (pointer: coarse) {
+  .login-bar input {
+    font-size: max(16px, 0.74em);
+  }
+
+  .login-bar-small input {
+    font-size: max(16px, 1em);
+  }
+}
+
+.login-notice {
+  --d: 1.35s;
+  position: absolute;
+  left: 50%;
+  top: max(80vh, calc(60vh + var(--form-h, 0px) + 2.4vh));
+  width: min(92vw, 740px);
+  transform: translateX(-50%);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(9px, 0.72vw, 11px);
+  line-height: 1.25;
+  text-align: center;
+  color: #d9d9d4;
+}
+
+.login-notice p {
+  margin: 0;
+}
+
+.login-watermark {
+  --d: 0.45s;
+  position: absolute;
+  right: -7vh;
+  bottom: -9vh;
+  width: 34vh;
+  height: auto;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.login > .login-watermark {
+  animation-name: login-on-faint;
+}
+
+@keyframes login-on-faint {
+  to {
+    opacity: 0.07;
+  }
+}
+
+.login-station {
+  --d: 1.35s;
+  position: absolute;
+  right: calc(clamp(6px, 0.8vw, 12px) + 14px);
+  bottom: calc(clamp(6px, 0.8vw, 12px) + 12px);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: center;
+  color: #d9d9d4;
+}
+
+.login-station p {
+  margin: 0;
+}
+
+/* Back from the link: nothing but the line, on black. */
+.login-verify {
+  display: grid;
+  place-items: center;
+}
+
+.login-verify-line {
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(12px, 0.95vw, 15px);
+  letter-spacing: 0.1em;
+}
+
+.login-caret {
+  display: inline-block;
+  width: 0.62em;
+  height: 1.05em;
+  margin-left: 0.3em;
+  vertical-align: -0.16em;
+  background: #e7e7e4;
+  animation: login-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes login-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.login > .login-flash {
+  position: absolute;
+  inset: 0;
+  background: #f4f2ed;
+  opacity: 0;
+  animation: none;
+  pointer-events: none;
+}
+
+/* The way out (components/Login.tsx `leave`), 3.5 seconds: the title comes
+   unsteady — a pixel this way and that, a flicker, no more; the gold line
+   goes, the top side and then the right; the seal breaks up in bands and is
+   gone; the fields and the notice go out; TERMINAL goes; C.I.A closes up
+   on itself and a * is left, which moves to the middle and goes out; black;
+   a white flash — the record's white — and the record. */
+.login[data-exit='yes'] > * {
+  opacity: 1;
+  animation: none;
+}
+
+.login[data-exit='yes'] .login-title {
+  animation: login-unsteady 1.2s steps(1, end) both;
+}
+
+.login[data-exit='yes'] .login-frame-t {
+  animation: login-side-x 0.4s 0.5s steps(4, end) both;
+}
+
+.login[data-exit='yes'] .login-frame-r {
+  animation: login-side-y 0.4s 0.75s steps(4, end) both;
+}
+
+.login[data-exit='yes'] .login-frame-b,
+.login[data-exit='yes'] .login-frame-l {
+  animation: login-gone 0.01s 2.8s both;
+}
+
+.login[data-exit='yes'] .login-seal {
+  animation: login-fragment 0.8s 0.8s steps(1, end) both;
+}
+
+.login[data-exit='yes'] > .login-watermark {
+  opacity: 0.07;
+  animation: login-gone 0.01s 0.9s both;
+}
+
+.login[data-exit='yes'] .login-form,
+.login[data-exit='yes'] .login-notice,
+.login[data-exit='yes'] .login-station {
+  animation: login-fade 0.5s 1.3s steps(5, end) both;
+}
+
+.login[data-exit='yes'] .login-title-rest {
+  animation: login-fade 0.5s 1.4s steps(5, end) both;
+}
+
+.login[data-exit='yes'] .login-title-cia {
+  animation: login-collapse 0.6s 1.6s steps(4, end) both;
+}
+
+.login[data-exit='yes'] .login-star {
+  animation: login-star 1.2s 1.7s cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+
+.login[data-exit='yes'] > .login-flash {
+  animation: login-flash 0.18s 3.3s ease-out both;
+}
+
+@keyframes login-unsteady {
+  0%,
+  100% {
+    transform: translateX(-50%);
+    filter: none;
+  }
+  12% {
+    transform: translateX(calc(-50% + 1px));
+  }
+  25% {
+    transform: translateX(calc(-50% - 1px)) translateY(1px);
+    filter: brightness(1.25);
+  }
+  37% {
+    transform: translateX(-50%);
+    filter: none;
+  }
+  50% {
+    transform: translateX(calc(-50% + 2px));
+    filter: brightness(0.8);
+  }
+  62% {
+    transform: translateX(calc(-50% - 1px)) translateY(-1px);
+    filter: none;
+  }
+  75% {
+    transform: translateX(calc(-50% + 1px));
+    filter: brightness(1.15);
+  }
+  87% {
+    transform: translateX(-50%);
+    filter: none;
+  }
+}
+
+@keyframes login-side-x {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes login-side-y {
+  to {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes login-gone {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes login-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes login-fragment {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  15% {
+    opacity: 0.9;
+    clip-path: inset(0 0 48% 0);
+  }
+  30% {
+    opacity: 0.8;
+    clip-path: inset(22% 0 0 0);
+    transform: translateX(calc(-50% + 3px));
+  }
+  45% {
+    opacity: 0.6;
+    clip-path: inset(0 0 30% 0);
+    transform: translateX(calc(-50% - 2px));
+  }
+  60% {
+    opacity: 0.45;
+    clip-path: inset(40% 0 12% 0);
+    transform: translateX(-50%);
+  }
+  75% {
+    opacity: 0.25;
+    clip-path: inset(10% 0 55% 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(50% 0 50% 0);
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes login-collapse {
+  0% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  80% {
+    transform: scaleX(0.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+}
+
+@keyframes login-star {
+  0% {
+    opacity: 0;
+    left: 12.6%;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  20% {
+    opacity: 1;
+    left: 12.6%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  62% {
+    opacity: 1;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  85% {
+    opacity: 1;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes login-flash {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (orientation: portrait) {
+  .login-seal {
+    top: 7vh;
+    width: 58vw;
+  }
+
+  .login-title {
+    top: calc(7vh + 58vw + 3vh);
+    width: calc(58vw * 485 / 425);
+    max-width: 84vw;
+  }
+
+  .login-form {
+    left: 10vw;
+    width: 80vw;
+    top: 52vh;
+  }
+
+  .login-notice {
+    top: max(76vh, calc(52vh + var(--form-h, 0px) + 2vh));
+    width: 86vw;
+  }
+
+  /* The notice's lines are set for a wide screen; on a narrow one it is one
+     paragraph, left to wrap where it falls. */
+  .login-notice p {
+    display: inline;
+  }
+
+  .login-notice p + p::before {
+    content: ' ';
+  }
+
+  /* Typing on a phone: the keyboard takes the lower half, so while a field
+     has it the seal and the title make room and the form comes up under
+     them; the notice, under the keyboard anyway, waits. */
+  .login[data-typing='yes'] .login-seal {
+    top: 4vh;
+    width: 30vw;
+  }
+
+  .login[data-typing='yes'] .login-title {
+    top: calc(4vh + 30vw + 2vh);
+    width: calc(30vw * 485 / 425);
+  }
+
+  .login[data-typing='yes'] .login-form {
+    top: calc(4vh + 30vw + 2vh + 30vw * 37 / 425 + 6vh);
+  }
+
+  .login[data-typing='yes'] .login-notice,
+  .login[data-typing='yes'] .login-station,
+  .login[data-typing='yes'] > .login-watermark {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login[data-exit='yes'] > *:not(.login-flash) {
+    animation: login-gone 0.01s 0.15s both !important;
+  }
+
+  .login[data-exit='yes'] > .login-flash {
+    animation: login-flash 0.01s 0.45s both !important;
+  }
+
+  .login-caret {
+    animation: none;
+  }
+}
+
+/* ── the record (components/records/Record.tsx) ─────────────────────────
+
+   Past the terminal, the first thing that is not the institution's: a warm
+   white, black type, most of it empty. The record number and the version
+   small in the top corners; one statement, large; under it, as text, the
+   one or two things to do; the session's door small at the foot. */
+:root:has(.record),
+body:has(.record) {
+  background: #f4f2ed;
+}
+
+.record {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100svh;
+  padding: clamp(16px, 2.2vw, 36px);
+  background: #f4f2ed;
+  color: #0b0b0a;
+}
+
+.record-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  min-height: 1.4em;
+}
+
+.record-corner,
+.record-meta {
+  margin: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+}
+
+.record-body {
+  align-self: center;
+  max-width: 1200px;
+  padding: 12vh 0 10vh clamp(0px, 6vw, 110px);
+}
+
+.record-statement {
+  margin: 0;
+  font-family: var(--font-grotesk);
+  font-weight: 700;
+  font-size: clamp(38px, 6.6vw, 112px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.record-quote,
+.record-full {
+  margin: 6vh 0 0;
+  max-width: 34em;
+  font-family: var(--font-grotesk);
+  font-size: clamp(15px, 1.15vw, 18px);
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.record-quote {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.record-meta {
+  margin-bottom: 3vh;
+}
+
+.record-full {
+  margin-top: 0;
+}
+
+.record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 2.6em;
+  margin-top: 7vh;
+}
+
+.record-action,
+.record-menu-toggle,
+.record-menu-item {
+  padding: 0.35em 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  color: inherit;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+}
+
+.record-action:hover,
+.record-menu-toggle:hover,
+.record-menu-item:hover {
+  border-bottom-color: currentColor;
+}
+
+.record-action:focus-visible,
+.record-menu-toggle:focus-visible,
+.record-menu-item:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+.record-foot {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 1.6em;
+}
+
+.record-menu {
+  display: flex;
+  align-items: baseline;
+  gap: 2em;
+}
+
+.record-menu-toggle,
+.record-menu-item {
+  font-size: 10px;
+  color: #5d5c58;
+}
+
+@media (orientation: portrait) {
+  .record-body {
+    padding: 10vh 0 8vh;
+  }
+}
+
+/* The blue pill: a crash (components/Error404.tsx), over everything. */
+.error404 {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: #0000a8;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.error404 canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+@keyframes terminal-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  7% {
+    opacity: 0.965;
+  }
+  9% {
+    opacity: 1;
+  }
+  41% {
+    opacity: 0.975;
+  }
+  43% {
+    opacity: 1;
+  }
+  68% {
+    opacity: 0.955;
+  }
+  69% {
+    opacity: 1;
+  }
+}
+
+/* A step, not a fade: something that is not there, then is. */
+@keyframes terminal-offer {
+  to {
+    opacity: 1;
+  }
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 0.62em;
+  height: 1.05em;
+  margin-left: 0.08em;
+  vertical-align: -0.16em;
+  background: currentColor;
+  box-shadow:
+    0 0 0.12em rgb(158 212 180 / 0.8),
+    0 0 0.5em rgb(158 212 180 / 0.4);
+}
+
+.terminal-cursor[data-idle='yes'] {
+  animation: terminal-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes terminal-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── the application: FORM W*–01 (/apply, components/apply/) ──────────────
+
+   The terminal the Macintosh offered, as a room to fill in a form. The
+   same phosphor on the same black, the same raster and grain; a typewriter
+   face for the system and the entries, the site's grotesk for nothing —
+   this screen is all machine. Thin institutional rules, small labels, a
+   lot of black. Red only where something is wrong, and then only a word. */
+
+.tty {
+  position: relative;
+  min-height: 100svh;
+  background: var(--color-phosphor-bed);
+  color: var(--color-phosphor);
+  font-family: 'Courier New', Courier, 'Nimbus Mono PS', monospace;
+  font-size: clamp(13px, min(1.05vw, 1.9vh), 16px);
+  line-height: 1.65;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  text-shadow:
+    0 0 1px rgb(158 212 180 / 0.55),
+    0 0 0.35em rgb(158 212 180 / 0.22);
+  --tty-rule: rgb(158 212 180 / 0.24);
+  --tty-dim: rgb(158 212 180 / 0.6);
+  --tty-faint: rgb(158 212 180 / 0.38);
+  --color-warn: #c4463c;
+}
+
+.tty-grain,
+.tty-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.tty-grain {
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  mix-blend-mode: screen;
+}
+
+.tty-lines {
+  background: repeating-linear-gradient(to bottom, rgb(0 0 0 / 0) 0 2px, rgb(0 0 0 / 0.22) 2px 3px);
+  mix-blend-mode: multiply;
+}
+
+/* CLOSE, top right; the status line, at the foot: FORM · SECTION · DRAFT SAVED. */
+.tty-close {
+  position: fixed;
+  top: var(--frame);
+  right: var(--frame);
+  z-index: 4;
+  font-size: 0.8em;
+  letter-spacing: 0.14em;
+  color: var(--tty-dim);
+  text-decoration: none;
+  padding: 0.6em 0.4em;
+  margin: -0.6em -0.4em;
+}
+
+.tty-close:hover,
+.tty-close:focus-visible {
+  color: var(--color-phosphor);
+  outline: none;
+}
+
+.tty-status {
+  position: fixed;
+  left: var(--frame);
+  right: var(--frame);
+  bottom: var(--frame);
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2em;
+  font-size: 0.78em;
+  letter-spacing: 0.14em;
+  color: var(--tty-dim);
+  pointer-events: none;
+}
+
+.tty-status span:nth-child(2) {
+  text-align: center;
+}
+
+.tty-status span:last-child {
+  text-align: right;
+}
+
+/* The boot, the processing, the acceptance: one thing in the middle of the dark. */
+.tty-centre {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 12vh 8vw 16vh;
+}
+
+.tty-type {
+  font-size: clamp(15px, min(1.6vw, 2.9vh), 24px);
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  white-space: pre-wrap;
+  color: var(--color-phosphor);
+}
+
+.tty-boot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6em 2.2em;
+  margin-top: 2.4em;
+  opacity: 0;
+  animation: terminal-offer 0.01s 0.9s both;
+}
+
+.tty-dark {
+  animation: tty-dark 1.2s ease-out both;
+}
+
+@keyframes tty-dark {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The form: a column of entries, the blank card standing beside it. */
+.tty-main {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 66ch) minmax(220px, 1fr);
+  gap: 6vw;
+  padding: 14vh 8vw 18vh;
+}
+
+.tty-main-one {
+  grid-template-columns: minmax(0, 80ch);
+}
+
+.tty-col {
+  min-width: 0;
+}
+
+.tty-aside {
+  position: sticky;
+  top: 14vh;
+  align-self: start;
+  display: grid;
+  justify-items: end;
+  padding-top: 5.5em;
+}
+
+.tty-head {
+  outline: none;
+  padding-bottom: 1.2em;
+  border-bottom: 1px solid var(--tty-rule);
+  margin-bottom: 3em;
+}
+
+.tty-label {
+  display: block;
+  font-size: 0.78em;
+  letter-spacing: 0.16em;
+  color: var(--tty-dim);
+}
+
+.tty-optional {
+  color: var(--tty-faint);
+  letter-spacing: 0.14em;
+}
+
+.tty-num {
+  color: var(--tty-dim);
+}
+
+.tty-section-title,
+.tty-title {
+  margin: 0.4em 0 0;
+  font-size: clamp(16px, min(1.7vw, 3vh), 26px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+}
+
+.tty-headline {
+  margin: 2.6em 0 0;
+  font-size: clamp(14px, min(1.25vw, 2.3vh), 19px);
+  letter-spacing: 0.06em;
+  color: var(--color-paper);
+  opacity: 0.86;
+}
+
+.tty-h2 {
+  margin: 0 0 0.8em;
+  font-size: 1.05em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.tty-h2-space {
+  margin-top: 3.4em;
+}
+
+.tty-big {
+  margin: 0 0 1.6em;
+  font-size: clamp(22px, min(3vw, 5.2vh), 44px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+}
+
+.tty-section-unasked {
+  padding-top: 8vh;
+}
+
+.tty-copy {
+  margin: 0 0 2.2em;
+  max-width: 58ch;
+  color: var(--color-paper);
+  opacity: 0.78;
+  text-shadow: none;
+}
+
+.tty-copy-small {
+  font-size: 0.86em;
+  opacity: 0.6;
+}
+
+.tty-lead {
+  margin: 0 0 1.6em;
+  letter-spacing: 0.12em;
+}
+
+.tty-wake {
+  margin: 0 0 2.6em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+}
+
+.tty-close-lines {
+  margin: 2.6em 0 0;
+  letter-spacing: 0.08em;
+}
+
+.tty-benefits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 3em 0 0;
+  border-top: 1px solid var(--tty-rule);
+  border-left: 1px solid var(--tty-rule);
+}
+
+.tty-benefit {
+  padding: 1.4em 1.4em 1.6em;
+  border-right: 1px solid var(--tty-rule);
+  border-bottom: 1px solid var(--tty-rule);
+}
+
+.tty-benefit dt {
+  font-size: 0.82em;
+  letter-spacing: 0.14em;
+  margin-bottom: 0.8em;
+}
+
+.tty-benefit dd {
+  margin: 0;
+  color: var(--color-paper);
+  opacity: 0.72;
+  text-shadow: none;
+  font-size: 0.95em;
+}
+
+.tty-disclaimers {
+  margin-top: 3.2em;
+  letter-spacing: 0.1em;
+}
+
+.tty-disclaimers p {
+  margin: 0 0 0.3em;
+  color: var(--tty-dim);
+}
+
+.tty-disclaimers .tty-asks {
+  margin-top: 1.6em;
+  color: var(--color-phosphor);
+  font-weight: 700;
+}
+
+/* Entries. */
+.tty-stack {
+  display: grid;
+  gap: 2.4em;
+}
+
+.tty-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6em 3em;
+}
+
+.tty-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1em 2em;
+}
+
+.tty-field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.tty-field > .tty-label,
+.tty-field > legend.tty-label {
+  margin-bottom: 0.5em;
+}
+
+.tty-input,
+.tty-area {
+  display: block;
+  width: 100%;
+  padding: 0.45em 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(158 212 180 / 0.32);
+  border-radius: 0;
+  color: var(--color-phosphor);
+  font: inherit;
+  letter-spacing: inherit;
+  caret-color: var(--color-phosphor);
+  text-shadow: inherit;
+  transition: border-color 0.25s ease;
+}
+
+.tty-input:focus,
+.tty-area:focus {
+  outline: none;
+  border-bottom-color: var(--color-phosphor);
+}
+
+.tty-input[aria-invalid='true'],
+.tty-area[aria-invalid='true'] {
+  border-bottom-color: var(--color-warn);
+}
+
+.tty-input::placeholder {
+  color: var(--tty-faint);
+}
+
+.tty-area {
+  resize: vertical;
+  min-height: 3.2em;
+  line-height: 1.6;
+}
+
+.tty-area-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+}
+
+.tty-prefix {
+  padding-top: 0.45em;
+  white-space: nowrap;
+  color: var(--tty-dim);
+}
+
+.tty-meta {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 1.2em;
+}
+
+.tty-count {
+  font-size: 0.72em;
+  letter-spacing: 0.12em;
+  color: var(--tty-faint);
+}
+
+.tty-error {
+  margin: 0.5em 0 0;
+  font-size: 0.78em;
+  letter-spacing: 0.14em;
+  color: var(--color-warn);
+  text-shadow: none;
+}
+
+/* Choices: ( ) and [ ]. The native control is there for the keyboard and
+   the reader; the mark is what is seen. */
+.tty-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tty-options {
+  display: grid;
+  gap: 0.5em;
+}
+
+.tty-options-inline {
+  grid-template-columns: repeat(auto-fill, minmax(11em, max-content));
+  gap: 0.5em 2em;
+}
+
+.tty-option {
+  position: relative;
+  display: inline-flex;
+  gap: 0.8em;
+  align-items: baseline;
+  cursor: pointer;
+  color: var(--tty-dim);
+  transition: color 0.2s ease;
+}
+
+.tty-option[data-on='yes'] {
+  color: var(--color-phosphor);
+}
+
+.tty-option:hover {
+  color: var(--color-phosphor);
+}
+
+.tty-option:has(.tty-native:focus-visible) .tty-mark {
+  outline: 1px solid var(--color-phosphor);
+  outline-offset: 3px;
+}
+
+.tty-mark {
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+.tty-check-row {
+  margin: 0.2em 0;
+}
+
+.tty-acks {
+  display: grid;
+  gap: 0.9em;
+  margin: 1.6em 0 0;
+  padding: 1.6em 0;
+  border-top: 1px solid var(--tty-rule);
+  border-bottom: 1px solid var(--tty-rule);
+}
+
+/* Tensions: two words, three marks between them. */
+.tty-tensions {
+  display: grid;
+  gap: 0.9em;
+  margin-top: 1.4em;
+}
+
+.tty-tension {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  gap: 1.5em;
+  margin: 0;
+  padding: 0.6em 0;
+  border: 0;
+  border-bottom: 1px solid var(--tty-rule);
+}
+
+.tty-tension-opt {
+  position: relative;
+  display: inline-flex;
+  gap: 0.7em;
+  align-items: baseline;
+  cursor: pointer;
+  color: var(--tty-dim);
+}
+
+.tty-tension-opt[data-side='right'] {
+  justify-self: end;
+  flex-direction: row-reverse;
+}
+
+.tty-tension-opt[data-side='both'] {
+  font-size: 0.82em;
+  letter-spacing: 0.14em;
+}
+
+.tty-tension-opt[data-on='yes'],
+.tty-tension-opt:hover {
+  color: var(--color-phosphor);
+}
+
+.tty-tension-opt:has(.tty-native:focus-visible) .tty-mark {
+  outline: 1px solid var(--color-phosphor);
+  outline-offset: 3px;
+}
+
+/* Actions: [ CONTINUE ]. */
+.tty-btn {
+  display: inline-block;
+  padding: 0.35em 0.5em;
+  margin: -0.35em -0.5em;
+  background: none;
+  border: 0;
+  color: var(--color-phosphor);
+  font: inherit;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-shadow: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.tty-btn:hover,
+.tty-btn:focus-visible {
+  background: var(--color-phosphor);
+  color: var(--color-phosphor-bed);
+  text-shadow: none;
+  outline: none;
+}
+
+.tty-btn:disabled {
+  color: var(--tty-faint);
+  background: none;
+  cursor: default;
+}
+
+.tty-btn-primary {
+  font-weight: 700;
+}
+
+.tty-btn-small {
+  font-size: 0.8em;
+}
+
+.tty-btn-wide {
+  min-width: 9em;
+  text-align: center;
+  padding: 0.6em 1em;
+  margin: 0;
+  border: 1px solid var(--tty-rule);
+}
+
+.tty-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2em;
+  margin-top: 4em;
+  padding-top: 1.6em;
+  border-top: 1px solid var(--tty-rule);
+}
+
+/* Evidence in: a box on a rule, the picture once it is there. */
+.tty-drop {
+  position: relative;
+  border: 1px solid var(--tty-rule);
+  transition: border-color 0.2s ease;
+}
+
+.tty-drop[data-over='yes'] {
+  border-color: var(--color-phosphor);
+}
+
+.tty-drop-empty {
+  display: grid;
+  gap: 0.8em;
+  width: 100%;
+  min-height: 9em;
+  padding: 2em 1.4em;
+  background: none;
+  border: 0;
+  color: var(--tty-dim);
+  font: inherit;
+  letter-spacing: 0.12em;
+  text-align: left;
+  cursor: pointer;
+  text-shadow: inherit;
+}
+
+.tty-drop-empty:hover,
+.tty-drop-empty:focus-visible,
+.tty-drop:has(.tty-native:focus-visible) .tty-drop-empty {
+  color: var(--color-phosphor);
+  outline: none;
+}
+
+.tty-drop-accept {
+  font-size: 0.74em;
+  color: var(--tty-faint);
+}
+
+.tty-drop-has {
+  display: grid;
+  gap: 1em;
+  padding: 1em;
+}
+
+.tty-thumb {
+  display: block;
+  max-width: 100%;
+  max-height: 46vh;
+  object-fit: contain;
+  justify-self: start;
+  border: 1px solid var(--tty-rule);
+}
+
+.tty-thumb-empty {
+  width: 8em;
+  height: 6em;
+}
+
+.tty-audio {
+  width: 100%;
+  filter: invert(1) hue-rotate(120deg) saturate(0.4) brightness(0.9);
+}
+
+.tty-drop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6em 1.8em;
+}
+
+.tty-filename {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8em;
+  color: var(--tty-dim);
+}
+
+.tty-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--tty-rule);
+}
+
+.tty-progress span {
+  display: block;
+  height: 100%;
+  background: var(--color-phosphor);
+  transition: width 0.12s linear;
+}
+
+.tty-evidence {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2.8em;
+}
+
+.tty-evidence-slot {
+  display: grid;
+  gap: 1.2em;
+}
+
+.tty-traces {
+  display: grid;
+  gap: 2.4em;
+}
+
+.tty-trace {
+  display: grid;
+  gap: 1.2em;
+  padding-top: 1.4em;
+  border-top: 1px solid var(--tty-rule);
+}
+
+.tty-voice {
+  display: grid;
+  gap: 1.4em;
+}
+
+.tty-voice-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.6em;
+}
+
+/* The screening: the picture has the room; two words under it. */
+.tty-screening {
+  display: grid;
+  gap: 1.6em;
+}
+
+.tty-plate {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  min-height: 40vh;
+  max-height: 64vh;
+}
+
+.tty-plate img {
+  max-width: 100%;
+  max-height: 64vh;
+  object-fit: contain;
+  transition: opacity 0.18s ease;
+}
+
+.tty-screening[data-flash='keep'] .tty-plate,
+.tty-screening[data-flash='pass'] .tty-plate {
+  opacity: 0.2;
+}
+
+.tty-plate-empty {
+  width: min(100%, 64vh);
+  aspect-ratio: 4 / 5;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--tty-rule);
+  color: var(--tty-faint);
+  font-size: 2em;
+  letter-spacing: 0.2em;
+}
+
+.tty-screening-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2em;
+}
+
+.tty-screening-controls .tty-btn-wide:first-child {
+  justify-self: end;
+}
+
+.tty-screening-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2em;
+}
+
+.tty-screening-done {
+  padding: 8vh 0;
+}
+
+@media (hover: none) {
+  .tty-hide-touch {
+    visibility: hidden;
+  }
+}
+
+/* The declaration. */
+.tty-declaration {
+  list-style: none;
+  margin: 1.4em 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1em;
+  color: var(--color-paper);
+  opacity: 0.82;
+  text-shadow: none;
+}
+
+.tty-declaration li {
+  display: grid;
+  grid-template-columns: 2.6em 1fr;
+  gap: 0.6em;
+}
+
+/* The blank card: a card's proportions, a rule for an edge, turning a
+   little in the air. At issue it goes down into the slot and is gone. */
+.tty-card-stage {
+  display: grid;
+  justify-items: center;
+  gap: 1.6em;
+  perspective: 900px;
+  width: min(100%, 300px);
+}
+
+.tty-card {
+  width: 100%;
+  aspect-ratio: 85.6 / 54;
+  transform-style: preserve-3d;
+  animation: tty-card-turn 9s ease-in-out infinite;
+}
+
+@keyframes tty-card-turn {
+  0%,
+  100% {
+    transform: rotateY(-7deg) rotateX(3deg);
+  }
+  50% {
+    transform: rotateY(7deg) rotateX(-2deg);
+  }
+}
+
+.tty-card-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgb(158 212 180 / 0.55);
+  border-radius: 3.5% / 5.5%;
+  background:
+    linear-gradient(160deg, rgb(158 212 180 / 0.06), transparent 55%),
+    #060908;
+  box-shadow:
+    0 0 0.6em rgb(158 212 180 / 0.12),
+    0 1.2em 2.4em rgb(0 0 0 / 0.6);
+}
+
+.tty-card-mark {
+  position: absolute;
+  top: 8%;
+  left: 7%;
+  font-weight: 700;
+  font-size: 0.8em;
+  letter-spacing: 0.12em;
+}
+
+.tty-card-chip {
+  position: absolute;
+  top: 36%;
+  left: 7%;
+  width: 14%;
+  height: 20%;
+  border: 1px solid rgb(158 212 180 / 0.4);
+  border-radius: 12%;
+}
+
+.tty-card-state {
+  position: absolute;
+  right: 7%;
+  bottom: 9%;
+  font-size: 0.72em;
+  letter-spacing: 0.2em;
+  color: var(--tty-dim);
+}
+
+.tty-slot {
+  width: 112%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-phosphor) 20%, var(--color-phosphor) 80%, transparent);
+  opacity: 0.5;
+}
+
+.tty-card-stage[data-state='issuing'] .tty-card {
+  animation: tty-card-in 2s cubic-bezier(0.6, 0, 0.9, 0.4) both;
+}
+
+@keyframes tty-card-in {
+  0% {
+    transform: rotateY(0) rotateX(0) translateY(0);
+    opacity: 1;
+  }
+  70% {
+    transform: rotateX(70deg) translateY(120%) scale(0.92);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateX(90deg) translateY(150%) scale(0.85);
+    opacity: 0;
+  }
+}
+
+.tty-card-stage[data-state='issued'] .tty-card {
+  visibility: hidden;
+}
+
+.tty-card-stage[data-state='issuing'] .tty-slot,
+.tty-card-stage[data-state='issued'] .tty-slot {
+  opacity: 1;
+  box-shadow: 0 0 0.6em rgb(158 212 180 / 0.6);
+}
+
+.tty-accepted {
+  align-content: center;
+  gap: 3em;
+}
+
+.tty-accepted .tty-card-stage {
+  width: min(70vw, 260px);
+}
+
+/* The studio's view. */
+.tty-review-item {
+  padding: 1.6em 0;
+  border-top: 1px solid var(--tty-rule);
+}
+
+.tty-map {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1em 2em;
+  margin: 1.4em 0;
+}
+
+.tty-map dd {
+  margin: 0;
+  color: var(--tty-faint);
+}
+
+.tty-json {
+  max-height: 50vh;
+  overflow: auto;
+  padding: 1em;
+  border: 1px solid var(--tty-rule);
+  font-size: 0.78em;
+  color: var(--tty-dim);
+  text-shadow: none;
+}
+
+/* A phone: one column, the card small above the entries. */
+@media (max-width: 860px) {
+  .tty-main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3em;
+    padding: 12vh 6vw 20vh;
+  }
+
+  .tty-aside {
+    position: static;
+    order: -1;
+    justify-items: start;
+    padding-top: 0;
+  }
+
+  .tty-aside .tty-card-stage {
+    width: min(48vw, 200px);
+  }
+
+  .tty-grid-2,
+  .tty-grid-3,
+  .tty-benefits,
+  .tty-map {
+    grid-template-columns: 1fr;
+  }
+
+  .tty-tension {
+    grid-template-columns: 1fr;
+    gap: 0.4em;
+  }
+
+  .tty-tension-opt[data-side='right'] {
+    justify-self: start;
+    flex-direction: row;
+  }
+
+  .tty-status {
+    grid-template-columns: 1fr auto;
+    gap: 1em;
+    font-size: 0.7em;
+  }
+
+  .tty-status span:first-child {
+    display: none;
+  }
+
+  .tty-screening-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tty-screening-controls .tty-label {
+    grid-column: 1 / -1;
+    text-align: center;
+    order: -1;
+  }
+}
+
+/* ── the gallery, off the page for now (components/SelectedWorks.tsx) ── */
+
+.works {
+  container-type: inline-size;
+  background: var(--color-wall);
+  color: var(--color-ink);
+  padding: var(--frame);
+}
+
+.works-label {
+  margin: 0;
+  font-weight: 400;
+}
+
+.plate {
+  margin: 14svh 0 0;
+}
+
+.plate:first-of-type {
+  margin-top: calc(var(--frame) * 1.25);
+}
+
+.plate-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.plate-caption {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.9em;
+}
+
+.plate-work {
+  color: var(--color-graphite);
+}
+
+.plate[data-size='m'] .plate-body {
+  width: 76%;
+}
+
+.plate[data-size='m'][data-at='right'] .plate-body {
+  margin-left: auto;
+}
+
+@media (min-width: 768px) {
+  .plate {
+    margin-top: 22svh;
+    --plate-w: calc(var(--plate-h) * var(--plate-ratio, 0.8));
+  }
+
+  .plate:first-of-type {
+    margin-top: calc(var(--frame) * 1.25);
+  }
+
+  .plate[data-size='l'] {
+    --plate-h: min(84svh, 100cqw / var(--plate-ratio, 0.8));
+  }
+
+  .plate[data-size='m'] {
+    --plate-h: min(58svh, 100cqw / var(--plate-ratio, 0.8));
+  }
+
+  .plate .plate-body,
+  .plate[data-size='m'] .plate-body {
+    width: var(--plate-w);
+    margin-left: 0;
+  }
+
+  .plate[data-at='third'] .plate-body {
+    margin-left: min(33.333%, 100% - var(--plate-w));
+  }
+
+  .plate[data-at='right'] .plate-body,
+  .plate[data-size='m'][data-at='right'] .plate-body {
+    margin-left: auto;
+  }
+}
+
+.colophon {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 24svh;
+}
+
+.colophon-mark {
+  display: block;
+  width: 104px;
+  height: auto;
+}
+
+/* ── motion ─────────────────────────────────────────────────────────── */
+
+/* Arrival: nothing. The picture, the mark, the phone and the words are
+   simply there — no fade in (it was one, 2026-09-29, taken out at the
+   author's word: "그냥 뜨게"). Nothing on the screen moves until the phone
+   is picked up. */
+
+@media (prefers-reduced-motion: reduce) {
+  .program-bar,
+  .program-static,
+  .program-static::after,
+  .terminal,
+  .crt-raster canvas,
+  .terminal-cursor {
+    animation: none;
+  }
+
+  .program[data-phase='film'] .program-film {
+    animation: none;
+    opacity: 1;
+  }
+
+  .tty-boot-actions {
+    opacity: 1;
+    animation: none;
+  }
+
+  .tty-card,
+  .tty-dark {
+    animation: none;
+  }
+
+  .tty-card-stage[data-state='issuing'] .tty-card {
+    animation: none;
+    visibility: hidden;
+  }
+
+  .program-question,
+  .program-screen,
+  .program-mac,
+  .program-terminal,
+  .login > *,
+  .rebirth-pill,
+  .blank-letters,
+  .blank-rule {
+    transition: none;
+  }
+
+  .program[data-phase='zoom'] .program-bar {
+    animation: none;
+    height: 0;
+  }
+
+  .login > * {
+    animation: none;
+    opacity: 1;
+  }
+
+  .login > .login-watermark {
+    opacity: 0.07;
+  }
+}
