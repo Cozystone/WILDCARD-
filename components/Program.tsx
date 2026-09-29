@@ -141,8 +141,8 @@ export default function Program({ question, children }: { question: ReactNode; c
   const music = useRef<HTMLAudioElement>(null);
   const colorbars = useRef<HTMLVideoElement>(null);
   const audio = useRef<{ ctx: AudioContext; gain: GainNode; film: GainNode } | null>(null);
-  /** The colour bars' tone, through a gain of its own once there is a mix. */
-  const barsGain = useRef<GainNode | null>(null);
+  /** The music has been started for this viewing and should be playing. */
+  const musicOn = useRef(false);
   const mac = useRef<HTMLDivElement>(null);
   const wide = useRef<HTMLImageElement>(null);
   const close = useRef<HTMLImageElement>(null);
@@ -199,6 +199,16 @@ export default function Program({ question, children }: { question: ReactNode; c
       .catch(() => {
         priming.current.delete(el);
       });
+  }, []);
+
+  /** The mix and the music, running again if a phone has stopped them —
+   *  an interruption can suspend the audio graph, and a phone can pause the
+   *  music on its own; both come back only in a touch. */
+  const wake = useCallback(() => {
+    const ctx = audio.current?.ctx;
+    if (ctx && (ctx.state as string) !== 'running' && ctx.state !== 'closed') void ctx.resume().catch(() => {});
+    const m = music.current;
+    if (musicOn.current && m && m.paused && !m.ended) void m.play().catch(() => {});
   }, []);
 
   /** Where the push-in ends. Taken from the machine's layout box, which a
@@ -391,6 +401,7 @@ export default function Program({ question, children }: { question: ReactNode; c
       const m = music.current;
       if (m) {
         priming.current.delete(m);
+        musicOn.current = true;
         m.currentTime = 0;
         m.muted = muted;
         if (!audio.current) m.volume = 0;
@@ -562,50 +573,50 @@ export default function Program({ question, children }: { question: ReactNode; c
       setPhase('login');
       return;
     }
-    // The colour bars come seconds after this press, with their tone: started
-    // here, silently, so a phone will let them play then (`prime`) — their
-    // tone through a gain of its own, made now, at nought.
-    const cb = colorbars.current;
-    const a = audio.current;
-    if (cb && a && !barsGain.current) {
-      try {
-        const g = a.ctx.createGain();
-        g.gain.value = 0;
-        a.ctx.createMediaElementSource(cb).connect(g).connect(a.ctx.destination);
-        barsGain.current = g;
-      } catch {
-        /* its own switch, then */
-      }
-    }
-    if (barsGain.current) barsGain.current.gain.value = 0;
-    prime(cb, !barsGain.current);
+    // The colour bars come seconds after this press. They play silent — a
+    // second video starting with sound took the music with it on a phone —
+    // and are started here, in the press, so that a phone in low-power mode
+    // will let them play then (`prime`). And the music, if a phone has
+    // stopped it on the way here, is started again in this press.
+    prime(colorbars.current, true);
+    wake();
     // The rain thickening over the pull-back, a moment at its heaviest, then
     // the draining; the rain says when it has drained (CodeRain `onDone`),
     // and `limit` is there only in case it cannot.
     setPhase('rain');
     after(PROGRAM.red.out + PROGRAM.red.hold, () => setPhase('wash'));
     after(PROGRAM.red.out + PROGRAM.red.hold + PROGRAM.red.limit, () => setPhase((p) => (p === 'wash' ? 'colorbars' : p)));
-  }, [after, phase, prime]);
+  }, [after, phase, prime, wake]);
 
-  // The colour bars: a second of a set's test card, with its tone, cut in
-  // over the dark the rain left and cut out again — then the login.
+  // The colour bars: a second of a set's test card, cut in over the dark
+  // the rain left and cut out again — then the login. The picture is the
+  // clip, silent; the tone is a sine made in the mix, on the music's clock,
+  // cut in and out with the picture (20 ms each way, so it does not click).
   useEffect(() => {
     if (phase !== 'colorbars') return;
     const cb = colorbars.current;
     if (cb) {
       priming.current.delete(cb);
+      cb.muted = true;
       cb.currentTime = 0;
-      if (barsGain.current) {
-        barsGain.current.gain.value = PROGRAM.colorbars.gain;
-        cb.muted = false;
-      } else {
-        cb.muted = false;
-        cb.volume = PROGRAM.colorbars.gain;
-      }
-      cb.play().catch(() => {
-        cb.muted = true;
-        void cb.play().catch(() => {});
-      });
+      void cb.play().catch(() => {});
+    }
+    const a = audio.current;
+    if (a && a.ctx.state === 'running') {
+      const { hz, level: peak } = PROGRAM.colorbars.tone;
+      const hold = PROGRAM.colorbars.hold;
+      const t0 = a.ctx.currentTime;
+      const tone = a.ctx.createOscillator();
+      const g = a.ctx.createGain();
+      tone.type = 'sine';
+      tone.frequency.value = hz;
+      g.gain.setValueAtTime(0, t0);
+      g.gain.linearRampToValueAtTime(peak, t0 + 0.02);
+      g.gain.setValueAtTime(peak, t0 + hold - 0.02);
+      g.gain.linearRampToValueAtTime(0, t0 + hold);
+      tone.connect(g).connect(a.ctx.destination);
+      tone.start(t0);
+      tone.stop(t0 + hold + 0.05);
     }
     after(PROGRAM.colorbars.hold, () => {
       colorbars.current?.pause();
@@ -641,7 +652,7 @@ export default function Program({ question, children }: { question: ReactNode; c
     }
     snow.current?.pause();
     colorbars.current?.pause();
-    if (barsGain.current) barsGain.current.gain.value = 0;
+    musicOn.current = false;
     const m = music.current;
     if (m) {
       m.pause();
@@ -657,6 +668,26 @@ export default function Program({ question, children }: { question: ReactNode; c
     setZoom({ x: 0, y: 0, s: 1 });
     plan.current = null;
   }, [level]);
+
+  // While the program runs, any touch or key puts the sound back if a phone
+  // has taken it; and the audio graph, if it is suspended by an
+  // interruption, asks to be resumed as soon as it can.
+  const live = phase !== 'idle';
+  useEffect(() => {
+    if (!live) return;
+    const ctx = audio.current?.ctx;
+    const onState = () => {
+      if (ctx && (ctx.state as string) !== 'running' && ctx.state !== 'closed') void ctx.resume().catch(() => {});
+    };
+    window.addEventListener('pointerdown', wake, true);
+    window.addEventListener('keydown', wake, true);
+    ctx?.addEventListener('statechange', onState);
+    return () => {
+      window.removeEventListener('pointerdown', wake, true);
+      window.removeEventListener('keydown', wake, true);
+      ctx?.removeEventListener('statechange', onState);
+    };
+  }, [live, wake]);
 
   useEffect(() => {
     const onPop = () => home();
@@ -795,6 +826,7 @@ export default function Program({ question, children }: { question: ReactNode; c
             ref={colorbars}
             src={PROGRAM.colorbars.src}
             poster={PROGRAM.colorbars.poster}
+            muted
             playsInline
             preload="none"
           />

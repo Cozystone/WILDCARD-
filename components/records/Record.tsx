@@ -20,15 +20,16 @@ import {
 
 /**
  * The record — the holder's own space past the terminal, where the site's
- * * leads once a record exists. Two looks to choose between (2026-09-30):
+ * * leads once a record exists. Two looks were drawn (2026-09-30); the
+ * author chose the dossier, to be worked on from here:
  *
- *   editorial (default)  the white page of the first screen, grown: the
- *                        statement large, the card beside it as an object,
- *                        and, below the fold, the record as a form sheet,
- *                        the card's readings, the versions.
- *   dossier (?look=dossier)  the same record as the agency's own form, its
- *                        heading struck out and overwritten by WILDCARD*, a
- *                        rubber stamp for the clearance, typed fields.
+ *   dossier (default)    the record as the agency's own form, its heading
+ *                        struck out and overwritten by WILDCARD*, a rubber
+ *                        stamp for the clearance, typed fields.
+ *   editorial (?look=editorial, kept for comparison)  the white page of the
+ *                        first screen, grown: the statement large, the card
+ *                        beside it as an object, the record as a form sheet
+ *                        below the fold.
  *
  * Either way it never says dashboard, profile or settings: RECORD, CARD,
  * VERSIONS. The four corners hold it — the record number, the version, the
@@ -68,7 +69,7 @@ export default function Record() {
       }
       const v = await access.versions();
       if (!live) return;
-      const look: Look = new URLSearchParams(window.location.search).get('look') === 'dossier' ? 'dossier' : 'editorial';
+      const look: Look = new URLSearchParams(window.location.search).get('look') === 'editorial' ? 'editorial' : 'dossier';
       setData({ rec: r.value, versions: v.ok ? v.value : [], look });
     })();
     return () => {

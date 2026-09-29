@@ -125,10 +125,12 @@ export const PROGRAM = {
    *  is only a floor under it, should the rain stall. */
   red: { out: 4.4, hold: 0.9, limit: 9 },
   /** When the rain has drained: a second of colour bars — the author's clip
-   *  (a set's test card, torn and waving, with its 441 Hz tone), its first
-   *  1.4 seconds — cut in and cut out, then the login. `gain` is the tone's
-   *  level over the music. */
-  colorbars: { src: '/program/colorbars.mp4', poster: '/program/colorbars.webp', hold: 1.0, gain: 0.35 },
+   *  (a set's test card, torn and waving), its first 1.4 seconds — cut in
+   *  and cut out, then the login. The clip plays silent; its tone, a 441 Hz
+   *  sine, is made in the mix instead (`tone.level` its peak): on a phone a
+   *  second video starting with sound halfway through took the music with
+   *  it (2026-09-30). */
+  colorbars: { src: '/program/colorbars.mp4', poster: '/program/colorbars.webp', hold: 1.0, tone: { hz: 441, level: 0.07 } },
   /** Whether the rain is drawn in the scene, through the camera — large on
    *  the pushed-in screen, shrinking with the machine as the picture pulls
    *  back (2026-09-29, on trial) — or over the window, its glyphs one size
