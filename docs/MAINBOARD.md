@@ -152,7 +152,7 @@ lib/vcard.ts · lib/products.ts
 1. `20260930000000_records.sql` — 기존(운영 적용됨).
 2. `20261001000000_mainboard.sql` — **새로**. 순서: 새 열거형 · 테이블 → `profiles` → `records`(같은 id, `public_id` 유지) · `versions` → `record_versions`(최신 외엔 얼림) → 옛 트리거 · 함수 · 테이블 삭제 → 새 트리거 · 함수 · RLS · 권한.
    - 로컬: 적용 · 검증 완료.
-   - **운영: 아직** — `npx supabase db push`(비밀번호는 `SUPABASE_DB_PASSWORD`). 운영의 기존 두 기록(이름 없는 운영 계정 주소, provisional 인 본인 주소)이 그대로 옮겨진다. **코드 배포와 한 묶음** — 새 코드는 `records` 를 읽으므로, 마이그레이션 → 바로 `vercel deploy --prod` 순서.
+   - **운영: 9/30 적용** — `npx supabase db push` → 곧바로 `vercel deploy --prod --yes`(새 코드는 `records` 를 읽으므로 한 묶음). 기존 두 기록(이름 없는 운영 계정 주소, provisional 인 본인 주소)이 같은 id · `public_id` 로 옮겨졌다. 적용 뒤 공개 키로 확인: 새 테이블 전부 anon 거부(42501), `profiles` 없음, `public_record` 동작, 스튜디오 · 소지자 함수 anon 거부.
 
 ## 11. 로컬 시험
 

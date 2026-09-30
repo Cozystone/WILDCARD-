@@ -222,7 +222,7 @@ npx supabase status -o env
 - 무료 플랜은 자체 SMTP 없이는 메일 템플릿을 바꿀 수 없다(기본 발송은 팀원 주소에만, 시간당 2통, 링크는 코드 교환 방식 `?code=`). 터미널은 그 방식도 받는다 — SMTP 가 빠지면 그쪽으로 돌아간다.
 - **SMTP 연결됨(9/30)**: 운영 계정 Gmail(smtp.gmail.com:465, 보내는 이름 WILDCARD*) — 대시보드에서 본인이. 사용자 이름은 **전체 주소**(thecardthatcheats@gmail.com)여야 Gmail 이 받는다. 발송 한도는 대시보드(Authentication → Rate Limits)에서 — `config push` 가 다루지 않는 값.
 - **템플릿 올라감(9/30)**: `npx supabase config push --project-ref zqoonxlltveijuwckosn` — Magic Link · Confirm signup 둘 다 `authorize.html`, 제목 W* RECORD ACCESS / AUTHORIZATION REQUEST. 이제 메일 링크는 `token_hash` 방식(다른 브라우저 · 기기에서 열어도 됨)이고 코드도 함께 온다. 템플릿을 고치면 같은 명령으로 다시.
-- **Mainboard 마이그레이션은 운영에 아직 없다**(9/30 로컬만) — 운영 DB 는 옛 `profiles` · `versions`, 라이브 코드도 옛 `/record`. 올릴 때는 한 묶음으로: `npx supabase db push`(`SUPABASE_DB_PASSWORD`) → 곧바로 `vercel deploy --prod --yes`.
+- **Mainboard 마이그레이션 운영 적용(9/30)** — `npx supabase db push` → 곧바로 `vercel deploy --prod --yes`(코드와 스키마는 한 묶음: 새 코드는 새 테이블을 읽는다). 앞으로도 스키마가 바뀌는 배포는 이 순서로.
 
 ## Mainboard — 소지자의 기록 (9/30)
 
