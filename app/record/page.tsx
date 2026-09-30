@@ -1,16 +1,6 @@
-import type { Metadata, Viewport } from 'next';
-import Record from '@/components/records/Record';
+import Home from '@/components/mainboard/Home';
 
-export const metadata: Metadata = {
-  title: 'RECORD — WILDCARD*',
-  robots: { index: false, follow: false },
-};
-
-export const viewport: Viewport = {
-  themeColor: '#f4f2ed',
-};
-
-/** /record — the holder's record, past the terminal. */
+/** /record — RECORD: how the holder left themselves. */
 export default function RecordPage() {
-  return <Record />;
+  return <Home />;
 }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { access } from '@/lib/records/access';
 import { RECORD as R } from '@/lib/records/copy';
-import { Star } from './Record';
+import Star from '@/components/mainboard/Star';
 
 /**
  * The * on the city, bottom left, on the road: there only for a browser

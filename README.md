@@ -3,7 +3,7 @@
 한 화면: **도시**. 스크롤 없음, 진입 애니메이션 없음. 사진 오른쪽 아래의 **1980년대 벽돌폰**(사진의 빛으로 렌더, 20° 틀어짐)을 누르면 영화 클립처럼 검은 바 → TV 노이즈(1.5초, 소리) → 영상이 신호를 잡듯 들어옴(소리 + 음원) → 마지막 프레임 위의 질문 →
 흰 바탕의 매킨토시 → 화면으로 다가가 **베젤이 보이는 거리**에서 멈춤 → 그 화면 안에 영화의 오프닝 문장 → **READY FOR A REBIRTH?** + 픽셀 빨간약/파란약.
 빨간약 = 코드비가 확대된 화면 위에서 시작해 매킨토시 전체로 줌아웃하는 동안 점점 굵어지고, 열마다 마지막 줄기가 검정으로 씻겨 내려가며 줄기가 하나씩 줄어든다 → 1초 컬러바 → **C.I.A 터미널**(기록을 찾거나 발급 — 아래 「기록」) → 흰 **/record**. 파란약 = 파란 404, 새로고침 전까지 먹통. **되돌아가기는 없다**(브라우저 뒤로가기만 도시로).
-`/apply` 는 FORM W*–01, 카드 신청 폼 — 같은 터미널 안에서(아래 「FORM W*–01」).
+`/record` 부터는 소지자의 **Mainboard**(기록 · 카드 · 버전 · 공개면 — 아래 「Mainboard」, 자세히는 [`docs/MAINBOARD.md`](docs/MAINBOARD.md)). 옛 신청폼 `/apply`(FORM W*–01)는 남아 있지만 어디서도 연결되지 않는다 — 새 신청은 `/create` 자리.
 갤러리(GALLERY)는 코드에 있고 페이지에서만 빠져 있다(아래). Next.js 16 + Tailwind CSS 4. 전 페이지 정적 생성.
 
 ## 실행
@@ -25,7 +25,12 @@ npm run build        # 배포 전 검증
 | `/apply/review` | 스튜디오용: 이 기기에 접수된 신청의 원본 JSON · PORTRAIT MAP 빈칸. noindex |
 | `/terminal` | C.I.A 터미널만 — 영화 없이 기록으로 돌아올 때. noindex |
 | `/auth/confirm` | 메일 링크가 돌아오는 곳: 검은 화면 `VERIFYING RECORD...` → 터미널. noindex |
-| `/record` | 기록(세션이 있어야). noindex |
+| `/record` | Mainboard — RECORD(세션 + 이름 있는 기록이어야, 아니면 `/terminal`). noindex |
+| `/record/edit` · `/record/rewrite` | EDIT(정정, 버전 그대로) · REWRITE(새 버전) |
+| `/record/versions` · `/record/versions/[n]` | 버전 목록 · 버전 문서(B 서류 · 도장) |
+| `/record/card` | 발급된 카드 · NFC 주소 · QR · 분실 표시 |
+| `/w/[token]` · `/w/[token]/vcard` | 카드를 대면 열리는 공개면(MEET / KNOW) · SAVE CONTACT. `?k=` 공유 키, `?v=` 버전. noindex |
+| `/create` · `/create/self` · `/create/studio` | 카드로 가는 두 길 — 자리(새 신청폼 대기). `/issue` 는 `/create` 로 |
 
 ## 구조
 
@@ -33,7 +38,7 @@ npm run build        # 배포 전 검증
 |---|---|
 | `components/Home.tsx` | 페이지. 모든 라우트가 이걸 그린다. |
 | `components/Hero.tsx` | 도시 화면. 사진 · 워드마크 · 전화기(`Phone`) · 캡션 줄(내비). A·B·C 스위치는 뺐다(라우트는 남아 있다). |
-| `components/Program.tsx` | 전화기(`Phone`, 판 안의 트리거)와 그 뒤 전부(클라이언트): 여덟 단계 idle → bars → static → film → end → mac → zoom → terminal. 줌의 수치는 시작 순간에 잰다. 터미널이 끝나면 `/apply?via=terminal` 로. **CLOSE · ESC · 클릭 복귀 없음.** 판이 size container 라 고정 스테이지는 판 밖에 두고 트리거만 context 로 잇는다. |
+| `components/Program.tsx` | 전화기(`Phone`, 판 안의 트리거)와 그 뒤 전부(클라이언트): idle → bars → static → film → end → mac → zoom → terminal → (알약) rain → wash → colorbars → login / crash. 줌의 수치는 시작 순간에 잰다. **CLOSE · ESC · 클릭 복귀 없음.** 판이 size container 라 고정 스테이지는 판 밖에 두고 트리거만 context 로 잇는다. |
 | `components/Pill.tsx` · `components/Error404.tsx` | 픽셀 알약(26×12 SVG) · 파란약의 404(캔버스 이진화 픽셀 폰트 + 입력 잠금, 새로고침 키만 통과). |
 | `public/matrix/` | Rezmason/matrix(MIT)의 클래식 폰트 `Matrix-Code.ttf` 와 LICENSE 만. WebGL 페이지는 `tools/.props/matrix-iframe/`(배포 안 함). |
 | `components/CodeRain.tsx` | 빨간약의 코드비: Rezmason 의 폰트 · 글리프 순서 · 클래식 색 · 원리로 그린 투명 캔버스. 격자는 **장면 좌표**, 매 프레임 매킨토시의 화면상 크기 · 위치(`camera()`)로 그려 줌을 따라 글자가 같은 비율로 축소(`PROGRAM.rainInScene`, false 면 창 기준 고정 크기). 스프라이트는 배율 1 · 2.2 · 시작 배율 세 벌. `build` 초 동안 굵어지고, `draining` 이면 열마다 마지막 줄기가 흰색을 끌고 내려가며 줄어든다 → 전부 흰색이면 `onDone`. |
@@ -136,7 +141,7 @@ Vercel 프로젝트 `wildcard-site` (anthony-kims-projects). 연결 정보는 `.
 
 ## 로그인 · 비트 · 광고판 (9/29 밤)
 
-- **로그인** `components/Login.tsx`: 빨간약 코드비가 검정으로 씻겨 나가고 1초 컬러바 뒤(`colorbars` → `login` 단계). 9/30부터 실제 기록 조회 · 발급(아래 「기록」). 기관 단말기 구성 — 금색 얇은 틀 · **본인 휘장** `public/program/cia-seal.webp`(COUNTER IDENTITY AGENCY / WILDCARD SYSTEM, 425×425 투명 바탕) · 제목 `cia-title.webp`(C.I.A TERMINAL, 485×37) — **C.I.A = Counter Identity Agency** · Holder: 한 칸 · Clearance: Unissued · 고지문 · 흐린 워터마크 · 스테이션 이름. 조각이 하나씩 켜진다(`.login > *` 의 `--d`). 엔터 → 기록 없음 → `[ BEGIN SELF-ISSUANCE ]` → `/apply?via=terminal`, 이름은 `sessionStorage` `wildcard.holder` 로 넘겨 PREFERRED NAME 에 채운다. 계정 · 비밀번호 없음.
+- **로그인** `components/Login.tsx`: 빨간약 코드비가 검정으로 씻겨 나가고 1초 컬러바 뒤(`colorbars` → `login` 단계). 9/30부터 실제 기록 조회 · 발급(아래 「기록」). 기관 단말기 구성 — 금색 얇은 틀 · **본인 휘장** `public/program/cia-seal.webp`(COUNTER IDENTITY AGENCY / WILDCARD SYSTEM, 425×425 투명 바탕) · 제목 `cia-title.webp`(C.I.A TERMINAL, 485×37) — **C.I.A = Counter Identity Agency** · Holder: 한 칸 · Clearance: Unissued · 고지문 · 흐린 워터마크 · 스테이션 이름. 조각이 하나씩 켜진다(`.login > *` 의 `--d`). 계정 · 비밀번호 없음. (9/29 판의 `[ BEGIN SELF-ISSUANCE ]` → `/apply` 는 9/30 에 끊었다.)
 - **비트** `lib/beats.ts`(librosa, 각 곡 첫 60초의 박과 강박=킥): `Program.tsx` `makePlan` 이 영화 끝 `ending.plan`(1.6초) 전에 음악 재생 시각을 읽어 질문 · 매킨토시 페이드 · 줌을 강박에 얹는다. 창 · 여유는 `PROGRAM.ending`. 곡을 바꾸면 박자표도 다시 뽑는다(`tools/.props/beats.json` 의 스크립트 흐름, BRIEF).
 - **광고판** `public/hero/sign.webp`: 전화기 왼쪽 도로 위(`.hero-sign`, 사진 폭 20%, −2.5°), 모든 방문에. 가리키기만 한다 — 누르면 아무 일도 없다(전환은 전화기만, 9/30).
 - **코드비 배경**: 빨간약부터 매킨토시 둘레가 검정(0.9초), 드레인도 검정으로(`CodeRain wash`).
@@ -176,11 +181,11 @@ Vercel 프로젝트 `wildcard-site` (anthony-kims-projects). 연결 정보는 `.
   - 키보드: 입력 칸 없이도 치면 Holder 로, Y/N 으로 답. 줄은 타이핑되지만 스크린 리더에는 통째로(`aria-live`). 폰은 입력 중 휘장 · 제목이 줄고 폼이 키보드 위로.
   - 줄은 Clearance 아래에 쌓이고, 고지문은 폼 높이(`--form-h`)만큼 비켜 내려간다 — 겹치지 않는다.
 - **퇴장** (3.5초, `.login[data-exit]`): 제목이 1px 흔들리고 깜빡 → 금색 선 윗변 · 오른변이 사라짐 → 휘장이 띠로 끊기며 꺼짐 → 필드 · 고지문 → TERMINAL → C.I.A 가 오므라들며 워드마크의 `*` 하나(`lib/records/star.ts`) → 가운데로 → 검정 → 흰 플래시 → `/record`. reduced-motion 은 컷.
-- **/record** (`components/records/Record.tsx`): 따뜻한 흰색, 왼쪽 위 `W*–000137`(없으면 `W*–PENDING`), 오른쪽 위 `VERSION 01`, 큰 한 문장. 버전이 있으면 THIS IS HOW / YOU LEFT YOURSELF. + 최신 진술 + VIEW THIS VERSION · REWRITE, 없으면 NOTHING HAS BEEN / WRITTEN YET. + BEGIN SELF-ISSUANCE(→ `/apply`, 이름을 PREFERRED NAME 으로). 세션 닫기는 아래 작은 SESSION 뒤. 세션이 없거나 이름 없는 기록은 `/terminal` 로.
+- **/record** = Mainboard(아래 「Mainboard」). 세션이 없거나 이름 없는 기록은 `/terminal` 로.
 - **인증 계층** `lib/records/access.ts`: `request` · `confirmCode` · `confirmLink` · `record` · `name` · `latest` · `close` · `watch`. 패스키는 여기 `authorize` 방법 하나로 더한다(Supabase CLI 에 `[auth.passkey]` 가 있다). 세션은 `@supabase/ssr` 의 쿠키 — 토큰을 직접 저장하지 않는다.
-- **데이터** `supabase/migrations/20260930000000_records.sql`: `public.profiles`(auth.users 와 1:1 — email, display_name, record_number, public_id, clearance `unissued → provisional → self_authorized → issued`, status `pending → active`/`suspended`, created_at, updated_at), `public.versions`(holder_id, number, statement). RLS — 본인 기록만 읽고, 본인 기록의 이름만 바꾼다(첫 발급은 `claim_record`). clearance · 번호는 서비스 롤만(`set_clearance`, `issue_record_number`). anon 은 아무것도 못 읽는다. `record_number` 는 순번이라 공개 주소로 쓰지 않는다 — 공개용은 무작위 `public_id`. 로컬에서 권한을 하나씩 두드려 확인했다(BRIEF).
-- **환경 변수** (`.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(옛 프로젝트는 `NEXT_PUBLIC_SUPABASE_ANON_KEY`). 서비스 롤 키는 쓰지 않는다. 값이 없는 빌드에서 터미널은 `RECORDS UNREACHABLE.` + `[ BEGIN SELF-ISSUANCE ]`(이 기기에만 저장되는 신청폼).
-- 신청폼(FORM W*–01)의 내용은 아직 이 기기에만 저장된다 — 서버 저장(Storage + 테이블 + RLS)은 다음 단계.
+- **데이터** — 9/30 Mainboard 마이그레이션(`20261001000000_mainboard.sql`)이 아래 두 테이블을 `records` · `record_versions` 로 옮기고 없앤다(스키마는 `docs/MAINBOARD.md` §3). 처음 판: `supabase/migrations/20260930000000_records.sql`: `public.profiles`(auth.users 와 1:1 — email, display_name, record_number, public_id, clearance `unissued → provisional → self_authorized → issued`, status `pending → active`/`suspended`, created_at, updated_at), `public.versions`(holder_id, number, statement). RLS — 본인 기록만 읽고, 본인 기록의 이름만 바꾼다(첫 발급은 `claim_record`). clearance · 번호는 서비스 롤만(`set_clearance`, `issue_record_number`). anon 은 아무것도 못 읽는다. `record_number` 는 순번이라 공개 주소로 쓰지 않는다 — 공개용은 무작위 `public_id`. 로컬에서 권한을 하나씩 두드려 확인했다(BRIEF).
+- **환경 변수** (`.env.example`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`(옛 프로젝트는 `NEXT_PUBLIC_SUPABASE_ANON_KEY`). 서비스 롤 키는 쓰지 않는다. 값이 없는 빌드에서 터미널은 `RECORDS UNREACHABLE.` `TRY AGAIN LATER.`
+- 새 신청폼(본인 개편 예정)은 `/create/self` · `/create/studio` 자리에 — 파일은 Storage 비공개 버킷으로(다음 단계).
 
 ### 로컬에서 시험 (Docker 필요)
 
@@ -195,7 +200,8 @@ npx supabase status -o env
 `API_URL` 과 `PUBLISHABLE_KEY` 를 `.env.development.local` 에 `NEXT_PUBLIC_SUPABASE_URL` · `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 로 넣고 `npm run dev -- --port 3232`. 메일은 실제로 나가지 않고 http://127.0.0.1:54324 (Mailpit)에 쌓인다. Studio 는 `npx supabase start` (제외 없이) 로.
 
 - **새 기록**: `/terminal` → 아무 주소(예: `you@wildcard.test`) → Mailpit 의 메일 → 링크, 또는 코드를 `CODE:` 에 → `ISSUE ONE?` Y → 이름 → `/record`(NOTHING HAS BEEN WRITTEN YET.).
-- **돌아온 기록**: `/record` 의 SESSION → CLOSE SESSION → `/terminal` → 같은 주소 → 링크 → WELCOME BACK. 버전이 있는 화면은 SQL 로 하나 넣어 본다: `insert into public.versions (holder_id, number, statement) select id, 1, '…' from public.profiles where email = '…';` (스튜디오 쪽: `select public.set_clearance(id, 'self_authorized')`, `select public.issue_record_number(id)`).
+- **돌아온 기록**: `/record` 의 `···` → CLOSE SESSION → `/terminal` → 같은 주소 → 링크 → WELCOME BACK.
+- 버전 · 카드 · 공개면 · 분실 · NFC 시험은 `docs/MAINBOARD.md` §11–12(시험 카드는 SQL 로 `issue_card`).
 - **만료**: `/auth/confirm?token_hash=x&type=email` → AUTHORIZATION EXPIRED.
 - 비우기 `npm run db:reset`, 끄기 `npm run db:stop`.
 
@@ -216,3 +222,17 @@ npx supabase status -o env
 - 무료 플랜은 자체 SMTP 없이는 메일 템플릿을 바꿀 수 없다(기본 발송은 팀원 주소에만, 시간당 2통, 링크는 코드 교환 방식 `?code=`). 터미널은 그 방식도 받는다 — SMTP 가 빠지면 그쪽으로 돌아간다.
 - **SMTP 연결됨(9/30)**: 운영 계정 Gmail(smtp.gmail.com:465, 보내는 이름 WILDCARD*) — 대시보드에서 본인이. 사용자 이름은 **전체 주소**(thecardthatcheats@gmail.com)여야 Gmail 이 받는다. 발송 한도는 대시보드(Authentication → Rate Limits)에서 — `config push` 가 다루지 않는 값.
 - **템플릿 올라감(9/30)**: `npx supabase config push --project-ref zqoonxlltveijuwckosn` — Magic Link · Confirm signup 둘 다 `authorize.html`, 제목 W* RECORD ACCESS / AUTHORIZATION REQUEST. 이제 메일 링크는 `token_hash` 방식(다른 브라우저 · 기기에서 열어도 됨)이고 코드도 함께 온다. 템플릿을 고치면 같은 명령으로 다시.
+- **Mainboard 마이그레이션은 운영에 아직 없다**(9/30 로컬만) — 운영 DB 는 옛 `profiles` · `versions`, 라이브 코드도 옛 `/record`. 올릴 때는 한 묶음으로: `npx supabase db push`(`SUPABASE_DB_PASSWORD`) → 곧바로 `vercel deploy --prod --yes`.
+
+## Mainboard — 소지자의 기록 (9/30)
+
+> CARD remembers. RECORD changes. HOLDER decides.
+
+본인이 붙여 넣은 제품 구조 명세의 첫 단계. 틀은 홈과 같은 문법 — 잉크 테두리 안의 **종이 판**, 아래 한 줄 캡션 **RECORD / CARD / VERSIONS / REWRITE** + `···`(PUBLIC VIEW · PRIVACY · CONTACT · BILLING/SHIPPING *LATER* · CLOSE SESSION). 판의 위 모서리는 기록 번호 · 버전, 왼쪽 아래 `*` 는 도시로. "Dashboard" 라는 말은 화면에 없다.
+
+- **EDIT 와 REWRITE 는 다르다**: EDIT 는 지금 버전의 정정(번호 그대로). REWRITE 는 HAS SOMETHING CHANGED? — `YES` / `NOT SURE`(→ GOOD. UNCERTAINTY COUNTS.) — 새 버전, 이전 것은 얼어서 VERSIONS 에.
+- **카드는 발급 순간의 버전을 기억한다** — 공개면에서 VIEW ME WHEN THIS CARD WAS ISSUED.
+- **보이는 것은 소지자가**: 진술 · 소개 · 항목 · 연락처 · 이력 각각 PUBLIC / LINK-ONLY(공유 키 `?k=`) / PRIVATE. 비공개는 서버 밖으로 안 나온다(`public_record` 함수).
+- **NFC**: 카드 = HTTPS URL 하나(`/w/{불투명 토큰}`), 앱 없이 Android · iPhone 시스템 NFC 로. 데스크톱은 QR. 분실 표시하면 그 토큰의 공개면은 THIS ISSUE IS NO LONGER ACTIVE.
+- 가격 · 상품 구조는 `lib/products.ts` 한 곳(가격은 전부 비어 있음). 화면 문구는 `lib/mainboard/copy.ts`, 데이터 호출은 `lib/mainboard/data.ts`.
+- 스키마 · 라우트 · 컴포넌트 · 상태 · 아직 안 만든 것 · 로컬 시험 · NFC 시험: [`docs/MAINBOARD.md`](docs/MAINBOARD.md).

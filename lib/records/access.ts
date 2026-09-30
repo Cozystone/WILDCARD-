@@ -34,7 +34,7 @@ export const isAddress = (s: string) => ADDRESS.test(s.trim()) && s.trim().lengt
 export const linkType = (s: string | null): EmailOtpType | null =>
   s && (LINK_TYPES as readonly string[]).includes(s) ? (s as EmailOtpType) : null;
 
-function refusal(where: string, error: unknown): Refusal {
+export function refusal(where: string, error: unknown): Refusal {
   const e = (error ?? {}) as { code?: string; status?: number; name?: string; message?: string };
   console.error(`[records] ${where}`, error);
   if (e.name === 'AuthRetryableFetchError' || e.status === 0 || /failed to fetch|network/i.test(e.message ?? '')) return 'unreachable';
@@ -132,9 +132,9 @@ export const access = {
       return { ok: false, why: refusal('record: user', error) };
     }
     const { data, error: read } = await sb
-      .from('profiles')
+      .from('records')
       .select('display_name, record_number, clearance, status, created_at')
-      .eq('id', user.user.id)
+      .eq('holder_id', user.user.id)
       .maybeSingle<Row>();
     if (read) return { ok: false, why: refusal('record: read', read) };
     return { ok: true, value: toRecord(data, user.user.email ?? null) };
@@ -157,7 +157,7 @@ export const access = {
     const sb = recordsClient();
     if (!sb) return { ok: false, why: 'unreachable' };
     const { data, error } = await sb
-      .from('versions')
+      .from('record_versions')
       .select('number, statement, created_at')
       .order('number', { ascending: false })
       .limit(1)
@@ -171,7 +171,7 @@ export const access = {
     const sb = recordsClient();
     if (!sb) return { ok: false, why: 'unreachable' };
     const { data, error } = await sb
-      .from('versions')
+      .from('record_versions')
       .select('number, statement, created_at')
       .order('number', { ascending: false })
       .returns<{ number: number; statement: string; created_at: string }[]>();
